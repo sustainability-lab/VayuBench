@@ -1,0 +1,49 @@
+{
+    "category": "spatial_aggregation",
+    "question": "Which {location} recorded the {stats} average {col} level?",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    main_data = pd.read_csv(\"raw_data/main_data.csv\")\n    main_data['Timestamp'] = pd.to_datetime(main_data['Timestamp'])\n    data = main_data.groupby(\"{code_location}\")[\"{code_col}\"].mean().reset_index()\n    data = data.sort_values(by=\"{code_col}\")\n    print(data.iloc[{code_stats}][\"{code_location}\"])\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "location",
+        "stats",
+        "col"
+    ],
+    "code_vars": [
+        "code_location",
+        "code_stats",
+        "code_col"
+    ],
+    "location": [
+        "state",
+        "city",
+        "station"
+    ],
+    "code_location": [
+        "state",
+        "city",
+        "station"
+    ],
+    "stats": [
+        "highest",
+        "lowest",
+        "2nd highest",
+        "2nd lowest",
+        "3rd highest",
+        "3rd lowest"
+    ],
+    "code_stats": [
+        -1,
+        0,
+        -2,
+        1,
+        -3,
+        2
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "code_col": [
+        "PM2.5",
+        "PM10"
+    ]
+}

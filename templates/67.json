@@ -1,0 +1,45 @@
+{
+    "category": "funding_based",
+    "question": "Which {state_var} utilised the {stat_method_1} percentage of its allocated NCAP funding as of June 2022?",
+    "code": "\ndef true_code():\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    states_data = pd.read_pickle(\"preprocessed/states_data.pkl\")\n    ncap_funding_data = pd.read_pickle(\"preprocessed/ncap_funding_data.pkl\")\n\n    ncap_funding_data = ncap_funding_data.groupby('{state_code}')[['Total fund released','Utilisation as on June 2022']].sum().reset_index()\n    ncap_funding_data['utilisation_percent'] = (ncap_funding_data['Utilisation as on June 2022'] /\n                                               ncap_funding_data['Total fund released']) * 100\n    ans = ncap_funding_data.sort_values('utilisation_percent').iloc[{method_1}]['{state_code}']\n    print(ans)\n\ntrue_code()\n",
+    "ques_vars": [
+        "stat_method_1",
+        "state_var"
+    ],
+    "code_vars": [
+        "method_1",
+        "state_code"
+    ],
+    "stat_method_1": [
+        "lowest",
+        "highest",
+        "2nd lowest",
+        "2nd highest",
+        "3rd lowest",
+        "3rd highest",
+        "4th lowest",
+        "4th highest",
+        "5th lowest",
+        "5th highest"
+    ],
+    "state_var": [
+        "state",
+        "city"
+    ],
+    "method_1": [
+        "0",
+        "len(ncap_funding_data)-1",
+        "1",
+        "len(ncap_funding_data)-2",
+        "2",
+        "len(ncap_funding_data)-3",
+        "3",
+        "len(ncap_funding_data)-4",
+        "4",
+        "len(ncap_funding_data)-5"
+    ],
+    "state_code": [
+        "state",
+        "city"
+    ]
+}

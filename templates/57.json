@@ -1,0 +1,43 @@
+{
+    "category": "population_based",
+    "question": "What percentage of the population lives in states where the {stat_method_1} {num_col} exceeds {val}?",
+    "code": "\ndef true_code():\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    states_data = pd.read_pickle(\"preprocessed/states_data.pkl\")\n    ncap_funding_data = pd.read_pickle(\"preprocessed/ncap_funding_data.pkl\")\n\n    state_avg_pm25 = main_data.groupby('state')['{col}'].{method_1}.reset_index()\n    hazardous_states = state_avg_pm25[state_avg_pm25['{col}'] > {code_val}]['state'].tolist()\n    total_hazardous_pop = states_data[states_data['state'].isin(hazardous_states)]['population'].sum()\n    total_population = states_data['population'].sum()\n    percentage = (total_hazardous_pop / total_population) * 100\n    print(percentage)\ntrue_code()\n",
+    "ques_vars": [
+        "stat_method_1",
+        "num_col",
+        "val"
+    ],
+    "code_vars": [
+        "method_1",
+        "col",
+        "code_val"
+    ],
+    "stat_method_1": [
+        "average",
+        "median",
+        "25th percentile of",
+        "75th percentile of"
+    ],
+    "num_col": [
+        "PM 2.5",
+        "PM 10"
+    ],
+    "val": [
+        "60",
+        "100"
+    ],
+    "method_1": [
+        "mean()",
+        "median()",
+        "quantile(0.25)",
+        "quantile(0.75)"
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "code_val": [
+        "60",
+        "100"
+    ]
+}

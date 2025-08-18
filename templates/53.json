@@ -1,0 +1,65 @@
+{
+    "category": "population_based",
+    "question": "Which state has the {stat_method_1} {stat_method_2} {num_col} concentration relative to its population density?",
+    "code": "\ndef true_code():\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    states_data = pd.read_pickle(\"preprocessed/states_data.pkl\")\n    ncap_funding_data = pd.read_pickle(\"preprocessed/ncap_funding_data.pkl\")\n\n\n\n\n    avg_pm = main_data.groupby('state')['{col}'].{method_2}.reset_index()\n    merged_df = avg_pm.merge(states_data, on='state', how='inner')\n    merged_df['Population Density'] = merged_df['population'] / merged_df['area (km2)']\n    merged_df['pm_per_capita'] = merged_df['{col}'] / merged_df['Population Density']\n    required_state = merged_df.sort_values('pm_per_capita').iloc[{method_1}]['state']\n    print(required_state)\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "stat_method_1",
+        "num_col",
+        "stat_method_2"
+    ],
+    "code_vars": [
+        "method_1",
+        "col",
+        "method_2"
+    ],
+    "stat_method_1": [
+        "lowest",
+        "highest",
+        "2nd lowest",
+        "2nd highest",
+        "3rd lowest",
+        "3rd highest",
+        "4th lowest",
+        "4th highest",
+        "5th lowest",
+        "5th highest"
+    ],
+    "num_col": [
+        "PM 2.5",
+        "PM 10"
+    ],
+    "stat_method_2": [
+        "average",
+        "median",
+        "total",
+        "standard deviation of",
+        "variance of",
+        "25th percentile of",
+        "75th percentile of"
+    ],
+    "method_1": [
+        "0",
+        "len(merged_df)-1",
+        "1",
+        "len(merged_df)-2",
+        "2",
+        "len(merged_df)-3",
+        "3",
+        "len(merged_df)-4",
+        "4",
+        "len(merged_df)-5"
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "method_2": [
+        "mean()",
+        "median()",
+        "sum()",
+        "std()",
+        "var()",
+        "quantile(0.25)",
+        "quantile(0.75)"
+    ]
+}

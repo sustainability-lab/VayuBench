@@ -1,0 +1,113 @@
+{
+    "category": "spatial_aggregation",
+    "question": "Which {location} has the {stats} {method} {col} in {month} {year} ?",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    main_data = pd.read_csv(\"raw_data/main_data.csv\")\n    main_data['Timestamp'] = pd.to_datetime(main_data['Timestamp'])\n    data = main_data[(main_data['Timestamp'].dt.year == {code_year}) & (main_data['Timestamp'].dt.month == {code_month})]\n    data = data.groupby([\"{code_location}\"])[\"{code_col}\"].{code_method}.reset_index()\n    data = data.sort_values(by=\"{code_col}\")\n    print(data.iloc[{code_stats}][\"{code_location}\"])\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "location",
+        "stats",
+        "col",
+        "month",
+        "year",
+        "method"
+    ],
+    "code_vars": [
+        "code_location",
+        "code_stats",
+        "code_col",
+        "code_month",
+        "code_year",
+        "code_method"
+    ],
+    "method": [
+        "average",
+        "median",
+        "25th percentile of",
+        "75th percentile of"
+    ],
+    "code_method": [
+        "mean()",
+        "median()",
+        "quantile(0.25)",
+        "quantile(0.75)"
+    ],
+    "location": [
+        "state",
+        "city",
+        "station"
+    ],
+    "code_location": [
+        "state",
+        "city",
+        "station"
+    ],
+    "stats": [
+        "highest",
+        "2nd highest",
+        "3rd highest",
+        "3rd lowest",
+        "2nd lowest",
+        "lowest"
+    ],
+    "code_stats": [
+        -1,
+        -2,
+        -3,
+        2,
+        1,
+        0
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "code_col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "month": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ],
+    "code_month": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+    ],
+    "year": [
+        "2018",
+        "2019",
+        "2020",
+        "2021",
+        "2022",
+        "2023",
+        "2024"
+    ],
+    "code_year": [
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+    ]
+}

@@ -1,0 +1,57 @@
+{
+    "category": "area_based",
+    "question": "Which union territory has the {stat_method_1} {num_col} concentration per square kilometer based on the {stat_method_2} {num_col} values?",
+    "code": "\ndef true_code():\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    states_data = pd.read_pickle(\"preprocessed/states_data.pkl\")\n    ncap_funding_data = pd.read_pickle(\"preprocessed/ncap_funding_data.pkl\")\n\n    state_pm25 = main_data.groupby('state')['{col}'].{method_2}.reset_index()\n    states_area = states_data[states_data['isUnionTerritory'] == True][['state', 'area (km2)']]\n    merged_df = state_pm25.merge(states_area, on='state', how='inner')\n    merged_df['pm_per_km2'] = merged_df['{col}'] / merged_df['area (km2)']\n    max_area_state = merged_df.sort_values('pm_per_km2').iloc[{method_1}]['state']\n    print(max_area_state)\ntrue_code()\n",
+    "ques_vars": [
+        "stat_method_1",
+        "stat_method_2",
+        "num_col"
+    ],
+    "code_vars": [
+        "method_1",
+        "method_2",
+        "col"
+    ],
+    "stat_method_1": [
+        "lowest",
+        "highest",
+        "2nd lowest",
+        "2nd highest",
+        "3rd lowest",
+        "3rd highest"
+    ],
+    "stat_method_2": [
+        "average",
+        "median",
+        "total",
+        "standard deviation of",
+        "variance of",
+        "25th percentile of",
+        "75th percentile of"
+    ],
+    "num_col": [
+        "PM 2.5",
+        "PM 10"
+    ],
+    "method_1": [
+        "0",
+        "len(merged_df)-1",
+        "1",
+        "len(merged_df)-2",
+        "2",
+        "len(merged_df)-3"
+    ],
+    "method_2": [
+        "mean()",
+        "median()",
+        "sum()",
+        "std()",
+        "var()",
+        "quantile(0.25)",
+        "quantile(0.75)"
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ]
+}

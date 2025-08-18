@@ -1,0 +1,37 @@
+{
+    "category": "spatial_aggregation",
+    "question": "Which {location} has the {stats} number of monitoring stations?",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    main_data = pd.read_csv(\"raw_data/main_data.csv\")\n    main_data['Timestamp'] = pd.to_datetime(main_data['Timestamp'])\n    data = main_data.groupby(\"{code_location}\")[\"station\"].nunique().reset_index()\n    data = data.sort_values(by=\"station\")\n    print(data.iloc[{code_stats}][\"{code_location}\"])\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "location",
+        "stats"
+    ],
+    "code_vars": [
+        "code_location",
+        "code_stats"
+    ],
+    "location": [
+        "state",
+        "city"
+    ],
+    "code_location": [
+        "state",
+        "city"
+    ],
+    "stats": [
+        "highest",
+        "2nd highest",
+        "3rd highest",
+        "3rd lowest",
+        "2nd lowest",
+        "lowest"
+    ],
+    "code_stats": [
+        -1,
+        -2,
+        -3,
+        2,
+        1,
+        0
+    ]
+}

@@ -1,0 +1,51 @@
+{
+    "category": "specific_pattern",
+    "question": "Identify a year in which {city} experienced the cleanest air from 2018-{year}",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    main_data = pd.read_csv(\"raw_data/main_data.csv\")\n    main_data['Timestamp'] = pd.to_datetime(main_data['Timestamp'])\n    data = main_data[main_data[\"city\"] == \"{code_city}\"]\n    data = data[(data[\"Timestamp\"].dt.year >= 2018) & (data[\"Timestamp\"].dt.year <= {code_year})]\n    data = data.dropna(subset=\"PM2.5\")\n    data = data.groupby(data[\"Timestamp\"].dt.year)[\"PM2.5\"].mean().reset_index()\n    data = data.sort_values(by=\"PM2.5\")\n    print(data.iloc[0][\"Timestamp\"])\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "city",
+        "year"
+    ],
+    "code_vars": [
+        "code_city",
+        "code_year"
+    ],
+    "city": [
+        "Mumbai",
+        "Delhi",
+        "Bangalore",
+        "Hyderabad",
+        "Ahmedabad",
+        "Chennai",
+        "Kolkata",
+        "Surat",
+        "Pune",
+        "Jaipur"
+    ],
+    "code_city": [
+        "Mumbai",
+        "Delhi",
+        "Bangalore",
+        "Hyderabad",
+        "Ahmedabad",
+        "Chennai",
+        "Kolkata",
+        "Surat",
+        "Pune",
+        "Jaipur"
+    ],
+    "year": [
+        "2020",
+        "2021",
+        "2022",
+        "2023",
+        "2024"
+    ],
+    "code_year": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+    ]
+}

@@ -1,0 +1,63 @@
+{
+    "category": "population_based",
+    "question": "Which union territory has the {stat_method_1} population among the top {r} most polluted states, based on {stat_method_2} {num_col} levels?",
+    "code": "\ndef true_code():\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    states_data = pd.read_pickle(\"preprocessed/states_data.pkl\")\n    ncap_funding_data = pd.read_pickle(\"preprocessed/ncap_funding_data.pkl\")\n\n    state_pm_avg = main_data.groupby('state')['{col}'].{method_2}.reset_index()\n    filtered_states_data = states_data[states_data['isUnionTerritory'] == True][['state', 'population']]\n    merged_df = state_pm_avg.merge(filtered_states_data, on='state', how='inner')\n    merged_df = merged_df.sort_values('{col}', ascending=False)\n    top_polluted_states = merged_df.head({i})['state'].tolist()\n    top_states_population = merged_df[merged_df['state'].isin(top_polluted_states)]\n    max_population_state = top_states_population.sort_values('population').iloc[{method_1}]['state']\n    print(max_population_state)\n\ntrue_code()\n",
+    "ques_vars": [
+        "stat_method_1",
+        "r",
+        "stat_method_2",
+        "num_col"
+    ],
+    "code_vars": [
+        "method_1",
+        "i",
+        "method_2",
+        "col"
+    ],
+    "stat_method_1": [
+        "lowest",
+        "highest",
+        "2nd lowest",
+        "2nd highest"
+    ],
+    "r": [
+        "2",
+        "4"
+    ],
+    "stat_method_2": [
+        "average",
+        "median",
+        "total",
+        "standard deviation of",
+        "variance of",
+        "25th percentile of",
+        "75th percentile of"
+    ],
+    "num_col": [
+        "PM 2.5",
+        "PM 10"
+    ],
+    "method_1": [
+        "0",
+        "len(top_states_population)-1",
+        "1",
+        "len(top_states_population)-2"
+    ],
+    "i": [
+        "2",
+        "4"
+    ],
+    "method_2": [
+        "mean()",
+        "median()",
+        "sum()",
+        "std()",
+        "var()",
+        "quantile(0.25)",
+        "quantile(0.75)"
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ]
+}

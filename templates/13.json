@@ -1,0 +1,37 @@
+{
+    "category": "temporal_aggregation",
+    "question": "In which year was the {stats} average {col} recorded ?",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    main_data = pd.read_csv(\"raw_data/main_data.csv\")\n    main_data['Timestamp'] = pd.to_datetime(main_data['Timestamp'])\n    data = main_data.dropna(subset=[\"{code_col}\"])\n    data = data.groupby(data[\u201cTimestamp\u201d].dt.year)[\u201c{code_col}\u201d].mean().reset_index()\n    data = data.sort_values(by=\"{code_col}\")\n    print(data.iloc[{code_stats}][\"Timestamp\"])\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "stats",
+        "col"
+    ],
+    "code_vars": [
+        "code_stats",
+        "code_col"
+    ],
+    "stats": [
+        "highest",
+        "2nd highest",
+        "3rd highest",
+        "3rd lowest",
+        "2nd lowest",
+        "lowest"
+    ],
+    "code_stats": [
+        -1,
+        -2,
+        -3,
+        2,
+        1,
+        0
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "code_col": [
+        "PM2.5",
+        "PM10"
+    ]
+}
