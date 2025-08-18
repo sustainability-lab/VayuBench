@@ -101,6 +101,3 @@ VayuBench enables researchers and practitioners to:
 - Develop better code-generation models for environmental data
 - Build trustworthy AI systems for policy decision-making
 - Access air quality insights through natural language queries
-
----
-**Demo**: [VayuChat Live Application](https://huggingface.co/spaces/SustainabilityLabIITGN/VayuChat)  
