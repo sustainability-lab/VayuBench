@@ -1,0 +1,23 @@
+{
+    "category": "funding_based",
+    "question": "Identify the union territory that has the {stat_method_1} number of cities receiving NCAP funding.",
+    "code": "\ndef true_code():\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    states_data = pd.read_pickle(\"preprocessed/states_data.pkl\")\n    ncap_funding_data = pd.read_pickle(\"preprocessed/ncap_funding_data.pkl\")\n\n    city_count = ncap_funding_data.groupby('state')['city'].nunique().reset_index()\n    filtered_states_data = states_data[states_data['isUnionTerritory'] == True]\n    merged_df = pd.merge(filtered_states_data, city_count, on='state', how='inner')\n    max_cities_state = merged_df.sort_values('city').iloc[{method_1}]['state']\n    print(max_cities_state)\n\ntrue_code()\n",
+    "ques_vars": [
+        "stat_method_1"
+    ],
+    "code_vars": [
+        "method_1"
+    ],
+    "stat_method_1": [
+        "lowest",
+        "highest",
+        "2nd lowest",
+        "2nd highest"
+    ],
+    "method_1": [
+        "0",
+        "len(merged_df)-1",
+        "1",
+        "len(merged_df)-2"
+    ]
+}

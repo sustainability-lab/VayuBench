@@ -1,0 +1,45 @@
+{
+    "category": "spatial_aggregation",
+    "question": "How many {location} have only {num} station ?",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    data = main_data.groupby(\"{code_location}\")['station'].nunique().reset_index()\n    data = data[data['station'] == {code_num}]\n    count = len(data[\"{code_location}\"].to_list())\n    print(count)\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "location",
+        "num"
+    ],
+    "code_vars": [
+        "code_location",
+        "code_num"
+    ],
+    "location": [
+        "state",
+        "city"
+    ],
+    "code_location": [
+        "state",
+        "city"
+    ],
+    "num": [
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten"
+    ],
+    "code_num": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+    ]
+}

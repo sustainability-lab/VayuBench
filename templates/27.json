@@ -1,0 +1,77 @@
+{
+    "category": "specific_pattern",
+    "question": "Which date in the last {time} years recorded the {stats} {col} in the {city} ?",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    import datetime\n    main_data = pd.read_csv(\"raw_data/main_data.csv\")\n    main_data['Timestamp'] = pd.to_datetime(main_data['Timestamp'])\n    year = datetime.datetime.now().year\n    data = main_data[(main_data['city'] == \"{code_city}\") & (main_data['Timestamp'].dt.year >= (year - {code_time}))]\n    data = data.dropna(subset=\"{code_col}\")\n    data = data.sort_values(by=\"{code_col}\")\n    print(data.iloc[{code_stats}][\"Timestamp\"].date())\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "city",
+        "stats",
+        "col",
+        "time"
+    ],
+    "code_vars": [
+        "code_city",
+        "code_stats",
+        "code_col",
+        "code_time"
+    ],
+    "stats": [
+        "highest",
+        "2nd highest",
+        "3rd highest",
+        "3rd lowest",
+        "2nd lowest",
+        "lowest"
+    ],
+    "code_stats": [
+        -1,
+        -2,
+        -3,
+        2,
+        1,
+        0
+    ],
+    "col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "code_col": [
+        "PM2.5",
+        "PM10"
+    ],
+    "city": [
+        "Mumbai",
+        "Delhi",
+        "Bangalore",
+        "Hyderabad",
+        "Ahmedabad",
+        "Chennai",
+        "Kolkata",
+        "Surat",
+        "Pune",
+        "Jaipur"
+    ],
+    "code_city": [
+        "Mumbai",
+        "Delhi",
+        "Bangalore",
+        "Hyderabad",
+        "Ahmedabad",
+        "Chennai",
+        "Kolkata",
+        "Surat",
+        "Pune",
+        "Jaipur"
+    ],
+    "time": [
+        "five",
+        "four",
+        "three",
+        "two"
+    ],
+    "code_time": [
+        5,
+        4,
+        3,
+        2
+    ]
+}

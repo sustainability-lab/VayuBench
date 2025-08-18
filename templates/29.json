@@ -1,0 +1,25 @@
+{
+    "category": "specific_pattern",
+    "question": "Which month (e.g. January, February,... etc) from 2018-{year} has consistently recorded India's worst air quality index (AQI)?",
+    "code": "\ndef true_code():\n    import numpy as np\n    import pandas as pd\n    main_data = pd.read_csv(\"raw_data/main_data.csv\")\n    main_data['Timestamp'] = pd.to_datetime(main_data['Timestamp'])\n    data = main_data[(main_data[\"Timestamp\"].dt.year >= 2018) & (main_data[\"Timestamp\"].dt.year <= {code_year})]\n    data = data.groupby(data[\"Timestamp\"].dt.month_name())[\"PM2.5\"].mean().reset_index()\n    data = data.sort_values(by=\"PM2.5\")\n    print(data.iloc[-1][\"Timestamp\"])\n\n\ntrue_code()\n",
+    "ques_vars": [
+        "year"
+    ],
+    "code_vars": [
+        "code_year"
+    ],
+    "year": [
+        "2020",
+        "2021",
+        "2022",
+        "2023",
+        "2024"
+    ],
+    "code_year": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+    ]
+}

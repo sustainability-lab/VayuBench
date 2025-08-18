@@ -1,0 +1,47 @@
+{
+    "category": "funding_based",
+    "question": "In which financial year was the {stat_method_2} NCAP funding release the {stat_method_1} across cities?",
+    "code": "\ndef true_code():\n    import pandas as pd\n    main_data = pd.read_pickle(\"preprocessed/main_data.pkl\")\n    states_data = pd.read_pickle(\"preprocessed/states_data.pkl\")\n    ncap_funding_data = pd.read_pickle(\"preprocessed/ncap_funding_data.pkl\")\n    df = ncap_funding_data[\n        ['Amount released during FY 2019-20',\n         'Amount released during FY 2020-21',\n         'Amount released during FY 2021-22']\n    ]\n    avg_series = df.{method_2}\n    avg_series = avg_series.sort_values().reset_index()\n    avg_series.columns = ['Year', 'Amount']\n    required_year = avg_series.iloc[{method_1}]['Year'].split()[-1]\n    print(required_year)\n\ntrue_code()\n",
+    "ques_vars": [
+        "stat_method_1",
+        "stat_method_2"
+    ],
+    "code_vars": [
+        "method_1",
+        "method_2"
+    ],
+    "stat_method_1": [
+        "lowest",
+        "highest",
+        "2nd lowest",
+        "2nd highest",
+        "3rd lowest",
+        "3rd highest"
+    ],
+    "stat_method_2": [
+        "average",
+        "median",
+        "total",
+        "standard deviation of",
+        "variance of",
+        "25th percentile of",
+        "75th percentile of"
+    ],
+    "method_1": [
+        "0",
+        "len(avg_series)-1",
+        "1",
+        "len(avg_series)-2",
+        "2",
+        "len(avg_series)-3"
+    ],
+    "method_2": [
+        "mean()",
+        "median()",
+        "sum()",
+        "std()",
+        "var()",
+        "quantile(0.25)",
+        "quantile(0.75)"
+    ]
+}
