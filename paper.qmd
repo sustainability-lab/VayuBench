@@ -36,20 +36,12 @@ To bridge evaluation with practice, we deploy **VayuChat**, an interactive assis
 
 ::: {.feature-grid}
 ::: {.feature-card}
-::: {.feature-icon}
-🎯
-:::
-
 ### Executable Benchmark
 
 First domain-specific benchmark for air quality analytics, pairing 5,000 natural language queries with verified Python code over multiple real-world datasets and systematically defined complex query categories.
 :::
 
 ::: {.feature-card}
-::: {.feature-icon}
-📊
-:::
-
 ### Systematic LLM Evaluation
 
 Unified schema-aware prompting protocol with machine-verifiable metrics (exec@1, pass@k), revealing significant capability gaps across 13 models.
@@ -181,11 +173,11 @@ VayuBench enables:
 
 VayuBench is the **only benchmark** that combines:
 
-- ✅ Domain grounding (environmental data)
-- ✅ Executable Python code evaluation
-- ✅ Multi-dataset integration
-- ✅ Spatio-temporal reasoning
-- ✅ Deployed system (VayuChat)
+- Domain grounding (environmental data)
+- Executable Python code evaluation
+- Multi-dataset integration
+- Spatio-temporal reasoning
+- Deployed system (VayuChat)
 
 ## Future Work
 

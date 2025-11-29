@@ -8,6 +8,7 @@ website:
 
   navbar:
     background: primary
+    logo: assets/logo.svg
     search: true
     left:
       - text: "Home"

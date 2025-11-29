@@ -1,0 +1,13 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Air quality monitoring symbol - minimalist design -->
+  <!-- Outer circle representing monitoring -->
+  <circle cx="20" cy="20" r="18" stroke="#0066cc" stroke-width="2" fill="none"/>
+
+  <!-- Wind/air flow lines -->
+  <path d="M 10 15 Q 15 13 20 15" stroke="#0066cc" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M 10 20 Q 15 18 25 20" stroke="#0066cc" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M 10 25 Q 15 23 20 25" stroke="#0066cc" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Data point -->
+  <circle cx="27" cy="20" r="2.5" fill="#0066cc"/>
+</svg>

@@ -44,9 +44,9 @@ Proportion of failed executions, categorized by error type:
 
 | Model | Params | exec@1 ↑ | pass@1 ↑ | pass@2 ↑ | Error Rate ↓ |
 |-------|-------:|:--------:|:--------:|:--------:|:------------:|
-| **Qwen3-Coder-30B** 🥇 | 30B | **0.99** | **0.79** | **0.81** | 0.01 |
-| **Qwen3-32B** 🥈 | 32B | 0.98 | 0.78 | 0.81 | 0.01 |
-| **Qwen2.5-Coder-14B** 🥉 | 14B | 0.90 | 0.69 | 0.74 | 0.06 |
+| **Qwen3-Coder-30B** | 30B | **0.99** | **0.79** | **0.81** | 0.01 |
+| **Qwen3-32B** | 32B | 0.98 | 0.78 | 0.81 | 0.01 |
+| **Qwen2.5-Coder-14B** | 14B | 0.90 | 0.69 | 0.74 | 0.06 |
 | GPT-OSS-20B | 20B | 0.88 | 0.56 | 0.69 | 0.12 |
 | Qwen2.5-Coder-7B | 7B | 0.79 | 0.41 | 0.54 | 0.20 |
 | DeepSeek-Coder-6.7B | 6.7B | 0.77 | 0.48 | 0.54 | 0.23 |
@@ -196,7 +196,7 @@ state_averages = main_data.groupby('state')[['PM2.5','PM10']].mean()
 
 ::: {.feature-grid}
 ::: {.feature-card}
-### 🎯 Scaling Improves Reliability
+### Scaling Improves Reliability
 
 Larger models dominate across all metrics. Qwen3-Coder-30B achieves **0.99 exec@1** and **0.79 pass@1**, while 1-3B models struggle with exec@1 < 0.5. Performance shows approximately linear relationship with parameters.
 :::
