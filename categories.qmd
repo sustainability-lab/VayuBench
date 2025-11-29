@@ -1,0 +1,407 @@
+---
+title: "Benchmark Categories"
+---
+
+VayuBench comprises seven systematically defined query categories, each reflecting distinct analytical tasks for air quality decision-making. These categories were derived from stakeholder consultations with policymakers, air quality scientists, and environmental data practitioners.
+
+## Category Distribution
+
+::: {.stats-grid}
+::: {.stat-card}
+<div class="stat-number">48.8%</div>
+<div class="stat-label">Spatial Aggregation</div>
+:::
+
+::: {.stat-card}
+<div class="stat-number">24.6%</div>
+<div class="stat-label">Spatio-Temporal</div>
+:::
+
+::: {.stat-card}
+<div class="stat-number">12.2%</div>
+<div class="stat-label">Temporal Trends</div>
+:::
+
+::: {.stat-card}
+<div class="stat-number">14.5%</div>
+<div class="stat-label">Policy & Demographics</div>
+:::
+:::
+
+<br>
+
+## 1. Spatial Aggregation (SA) {#spatial-aggregation}
+
+::: {.category-card}
+::: {.category-header}
+### Spatial Aggregation (SA)
+::: {.category-count}
+4,897 questions (48.8%)
+:::
+:::
+
+Location-based summaries at fixed times, requiring geographic grouping across monitoring stations, cities, or states.
+
+**Example Questions**:
+
+- "Which state had the highest average PM2.5 in May 2023?"
+- "Identify the station in Delhi with the lowest PM10 on January 14, 2022"
+- "Which city reported the 2nd highest PM2.5 readings in August 2020?"
+
+**Code Example**:
+
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    # Filter data for specific time period
+    filtered = data[(data['Timestamp'].dt.year == 2023) &
+                     (data['Timestamp'].dt.month == 5)]
+    # Group by state and calculate mean PM2.5
+    grouped = filtered.groupby("state")["PM2.5"].mean()
+    grouped = grouped.dropna()
+    # Sort and get highest
+    sorted_data = grouped.sort_values()
+    return sorted_data.index[-1]
+```
+
+**Skills Tested**:
+- Temporal filtering (`dt.year`, `dt.month`, `dt.day`)
+- Geographic grouping (`groupby`)
+- Aggregation functions (`mean`, `max`, `min`)
+- Sorting and ranking (`sort_values`, `iloc`)
+- Handling missing data (`dropna`)
+
+:::
+
+## 2. Spatio-Temporal Aggregation (STA) {#spatio-temporal}
+
+::: {.category-card}
+::: {.category-header}
+### Spatio-Temporal Aggregation (STA)
+::: {.category-count}
+2,463 questions (24.6%)
+:::
+:::
+
+Combined space-time analysis requiring summaries across both geographic regions and time periods, such as comparing trends between states or tracking changes over years.
+
+**Example Questions**:
+
+- "Which state showed the second smallest decrease in PM10 between 2020 and 2023?"
+- "Which city had the highest average PM2.5 during summer months (April-June) in 2022?"
+- "Identify the state with the largest year-over-year improvement in PM2.5 from 2021 to 2022"
+
+**Code Example**:
+
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    # Get data for two years
+    data_2020 = data[data['Timestamp'].dt.year == 2020]
+    data_2023 = data[data['Timestamp'].dt.year == 2023]
+
+    # Calculate averages by state
+    avg_2020 = data_2020.groupby('state')['PM10'].mean()
+    avg_2023 = data_2023.groupby('state')['PM10'].mean()
+
+    # Calculate decrease
+    decrease = avg_2020 - avg_2023
+
+    # Sort and get 2nd smallest
+    sorted_decrease = decrease.sort_values()
+    return sorted_decrease.index[1]
+```
+
+**Skills Tested**:
+- Multi-period temporal filtering
+- Cross-time comparisons
+- Change/delta calculations
+- Multi-dimensional aggregation
+- Geographic and temporal grouping
+:::
+
+## 3. Temporal Trends (TT) {#temporal-trends}
+
+::: {.category-card}
+::: {.category-header}
+### Temporal Trends (TT)
+::: {.category-count}
+1,219 questions (12.2%)
+:::
+:::
+
+Time-series analysis and longitudinal patterns, focusing on how pollution levels evolve over time without explicit geographic grouping.
+
+**Example Questions**:
+
+- "During which month is the average PM2.5 level the highest across India?"
+- "On which day of the week were PM10 levels highest in 2022?"
+- "Which year recorded the lowest annual average PM2.5?"
+
+**Code Example**:
+
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    # Group by month name and calculate mean
+    monthly_avg = data.groupby(
+        data["Timestamp"].dt.month_name()
+    )["PM2.5"].mean()
+
+    # Sort to find highest
+    sorted_data = monthly_avg.sort_values()
+    return sorted_data.index[-1]
+```
+
+**Skills Tested**:
+- Temporal aggregation (`dt.month_name()`, `dt.dayofweek`, `dt.year`)
+- Time-series grouping
+- Trend identification
+- Statistical summaries over time
+- Date-time manipulation
+
+:::
+
+## 4. Funding-Based Queries (FQ) {#funding-queries}
+
+::: {.category-card}
+::: {.category-header}
+### Funding-Based Queries (FQ)
+::: {.category-count}
+443 questions (4.4%)
+:::
+:::
+
+NCAP policy and funding analysis, critical for financial accountability and outcome assessment. These queries link intervention (funding) to outcomes (air quality improvement).
+
+**Example Questions**:
+
+- "Which financial year had the highest average fund release across cities?"
+- "Which city received the most total NCAP funding between 2019-2022?"
+- "What is the average utilization rate across all NCAP-funded cities?"
+
+**Code Example**:
+
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    # Define fiscal year columns
+    fy_columns = [
+        'Amount released during FY 2019-20',
+        'Amount released during FY 2020-21',
+        'Amount released during FY 2021-22'
+    ]
+
+    # Calculate mean for each FY
+    avg_funding = ncap_funding_data[fy_columns].mean()
+
+    # Find FY with maximum funding
+    max_fy = avg_funding.idxmax()
+
+    # Extract year from column name
+    return max_fy.split('FY ')[1]
+```
+
+**Skills Tested**:
+- Multi-dataset integration
+- Financial data analysis
+- Column selection and aggregation
+- String manipulation
+- Policy-outcome linking
+
+:::
+
+## 5. Population-Based Exposure (PB) {#population-based}
+
+::: {.category-card}
+::: {.category-header}
+### Population-Based Exposure (PB)
+::: {.category-count}
+383 questions (3.8%)
+:::
+:::
+
+Queries joining air quality data with demographics to assess population-weighted exposure burden and health equity.
+
+**Example Questions**:
+
+- "Which state has the highest population-weighted average PM2.5 in 2023?"
+- "What percentage of India's population lives in states exceeding WHO PM2.5 limits (>15 µg/m³)?"
+- "Which is the 2nd least polluted state when normalized by per-capita PM10 exposure?"
+
+**Code Example**:
+
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    # Calculate average PM2.5 by state for 2023
+    data_2023 = data[data['Timestamp'].dt.year == 2023]
+    avg_pm25 = data_2023.groupby('state')['PM2.5'].mean().reset_index()
+
+    # Merge with population data
+    merged = avg_pm25.merge(
+        states_data[['state', 'population']],
+        on='state',
+        how='inner'
+    )
+
+    # Calculate population-weighted PM2.5
+    merged['weighted_pm25'] = merged['PM2.5'] * merged['population']
+
+    # Get state with highest weighted exposure
+    return merged.sort_values('weighted_pm25').iloc[-1]['state']
+```
+
+**Skills Tested**:
+- Multi-dataset joins (`merge`)
+- Demographic analysis
+- Weighted calculations
+- Equity metrics
+- Health impact assessment
+
+:::
+
+## 6. Area-Based Aggregation (AB) {#area-based}
+
+::: {.category-card}
+::: {.category-header}
+### Area-Based Aggregation (AB)
+::: {.category-count}
+373 questions (3.7%)
+:::
+:::
+
+Queries normalizing by geographical area, reflecting fairness in monitoring coverage and spatial density of pollution.
+
+**Example Questions**:
+
+- "Which state has the fewest monitoring stations per square kilometer?"
+- "Which union territory has the highest PM10 per km² in 2022?"
+- "Rank states by PM2.5 concentration normalized by land area"
+
+**Code Example**:
+
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    # Count unique stations per state
+    station_counts = data.groupby('state')['station'].nunique().reset_index()
+
+    # Merge with area data
+    merged = station_counts.merge(
+        states_data[['state', 'area (km2)']],
+        on='state',
+        how='inner'
+    )
+
+    # Calculate stations per km²
+    merged['stations_per_km2'] = merged['station'] / merged['area (km2)']
+
+    # Get state with lowest density
+    return merged.sort_values('stations_per_km2').iloc[0]['state']
+```
+
+**Skills Tested**:
+- Spatial normalization
+- Geographic density calculations
+- Multi-dataset integration
+- Coverage analysis
+- Fairness metrics
+
+:::
+
+## 7. Specific Patterns (SP) {#specific-patterns}
+
+::: {.category-card}
+::: {.category-header}
+### Specific Patterns (SP)
+::: {.category-count}
+256 questions (2.5%)
+:::
+:::
+
+Detection of rule-based violations over short time windows, such as exceeding WHO/CPCB limits or identifying exceedance events.
+
+**Example Questions**:
+
+- "Over the past five years, how many days did Mumbai exceed WHO PM2.5 limits (>15 µg/m³)?"
+- "How many times did Delhi's PM10 exceed 200 µg/m³ in 2021?"
+- "Which date in the last 5 years had the lowest PM2.5 in Jaipur?"
+
+**Code Example**:
+
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    from datetime import datetime, timedelta
+
+    # Define time window (last 5 years)
+    cutoff_date = datetime.now() - timedelta(days=5*365)
+
+    # Filter for Mumbai within time window
+    mumbai = data[
+        (data['city'] == 'Mumbai') &
+        (data['Timestamp'] >= cutoff_date)
+    ]
+
+    # Find exceedances (>15 µg/m³)
+    exceedance = mumbai[mumbai['PM2.5'] > 15]
+
+    # Count unique days
+    unique_days = exceedance['Timestamp'].dt.date.unique()
+    return len(unique_days)
+```
+
+**Skills Tested**:
+- Threshold detection
+- Pattern matching
+- Time window filtering
+- Exceedance counting
+- Rule-based logic
+
+:::
+
+## Template-Based Generation
+
+VayuBench uses a systematic template system to generate diverse queries while ensuring coverage. Each category has multiple templates with parameterized variables.
+
+::: {.callout-note}
+### Example Template Structure
+
+```json
+{
+  "category": "spatial_aggregation",
+  "question": "Which {location} reported the {stats} {col} during {month} {year}?",
+  "location": ["state", "city", "station"],
+  "stats": ["highest", "lowest", "2nd highest", "3rd lowest"],
+  "col": ["PM2.5", "PM10"],
+  "month": ["January", "February", ..., "December"],
+  "year": ["2018", "2019", "2020", "2021", "2022", "2023", "2024"]
+}
+```
+
+**Generated Instances**:
+- "Which **state** reported the **highest** **PM2.5** during **May** **2023**?"
+- "Which **city** reported the **lowest** **PM10** during **January** **2020**?"
+- "Which **station** reported the **2nd highest** **PM2.5** during **August** **2022**?"
+
+This systematic expansion from 67 templates produces ~26K candidate queries, from which we sample 5,000 to maximize diversity.
+:::
+
+## Paraphrasing for Naturalness
+
+Each sampled query is paraphrased using Gemini and manually verified to add linguistic variety without changing semantics:
+
+| Original | Paraphrased |
+|----------|-------------|
+| "Which state has the highest average PM10 in May 2023?" | "Identify the state with the top average PM10 concentration for May 2023." |
+| "Which city has the lowest PM2.5 in 2022?" | "Determine the city that recorded minimal PM2.5 levels during 2022." |
+
+This prevents models from overfitting to rigid templates and better reflects real-world query diversity.
+
+## Next Steps
+
+- Explore the [Datasets](datasets.qmd) that power these queries
+- Learn how to [Get Started](getting-started.qmd) with VayuBench
+- See [Results](results.qmd) from evaluating 13 LLMs across all categories
+

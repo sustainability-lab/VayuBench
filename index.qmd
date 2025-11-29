@@ -1,0 +1,97 @@
+---
+title: "VayuBench"
+subtitle: "Executable Benchmarking of LLMs for Multi-Dataset Air Quality Analytics"
+---
+
+## Overview
+
+VayuBench is the first executable benchmark for air quality analytics, featuring **5,000 natural language queries** paired with verified Python code across **7 analytical categories** using real Indian environmental data.
+
+**Key Features:**
+
+- Domain-grounded in real Indian environmental data (CPCB, NCAP, Census)
+- Executable Python code with sandboxed evaluation
+- Multi-dataset integration (pollution + funding + demographics)
+- Systematic evaluation of 13 open-source LLMs
+
+**Links:**
+
+- [GitHub Repository](https://github.com/sustainability-lab/VayuBench)
+- [HuggingFace Dataset](https://huggingface.co/datasets/SustainabilityLabIITGN/VayuBench)
+- [VayuChat Demo](https://huggingface.co/spaces/SustainabilityLabIITGN/VayuChat)
+
+## Quick Stats
+
+| Metric | Value |
+|--------|-------|
+| Benchmark Questions | 5,000 |
+| Query Categories | 7 |
+| LLMs Evaluated | 13 |
+| Real-World Datasets | 3 |
+| Time Period | 2017-2024 |
+
+## What is VayuBench?
+
+Air pollution causes over 1.6 million premature deaths annually in India. Yet decision-makers face barriers in turning diverse data on air pollution, population, and funding into actionable insights.
+
+VayuBench evaluates whether Large Language Models (LLMs) can translate natural-language questions into correct, multi-dataset Python analyses for air quality data.
+
+### Key Contributions
+
+1. **Executable Benchmark**: 5,000 natural language queries paired with verified Python code
+2. **Seven Query Categories**: Spatial, Temporal, Spatio-Temporal, Population, Area, Funding, Pattern-based
+3. **Comprehensive Evaluation**: exec@1 (syntactic) and pass@k (functional) metrics
+4. **Reproducible Framework**: Complete pipeline from question generation to evaluation
+
+## Example Query
+
+**Question**: "Which state had the highest average PM2.5 in May 2023?"
+
+**Expected Code**:
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    filtered = data[(data['Timestamp'].dt.year == 2023) &
+                     (data['Timestamp'].dt.month == 5)]
+    grouped = filtered.groupby("state")["PM2.5"].mean()
+    grouped = grouped.dropna()
+    sorted_data = grouped.sort_values()
+    return sorted_data.index[-1]
+```
+
+**Evaluation**: Code is executed in a sandbox and output compared to expected answer.
+
+## Top Results
+
+Best performing models:
+
+| Model | Size | exec@1 | pass@1 |
+|-------|------|--------|--------|
+| Qwen3-Coder-30B | 30B | **0.99** | **0.79** |
+| Qwen3-32B | 32B | 0.98 | 0.78 |
+| Qwen2.5-Coder-14B | 14B | 0.90 | 0.69 |
+
+See [Results](results.qmd) for full evaluation.
+
+## Citation
+
+```bibtex
+@inproceedings{acharya2025vayubench,
+  title={VayuBench and VayuChat: Executable Benchmarking and Deployment of LLMs
+         for Multi-Dataset Air Quality Analytics},
+  author={Acharya, Vedant and Pisharodi, Abhay and Pasi, Ratnesh and
+          Mondal, Rishabh and Batra, Nipun},
+  booktitle={Proceedings of CODS 2025},
+  year={2025}
+}
+```
+
+## Authors
+
+Vedant Acharya\*, Abhay Pisharodi\*, Ratnesh Pasi, Rishabh Mondal, Nipun Batra
+
+*\*Equal contribution*
+
+**Affiliation**: IIT Gandhinagar, IIIT Surat
+
+**Contact**: nipun.batra@iitgn.ac.in

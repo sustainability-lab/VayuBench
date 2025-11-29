@@ -1,0 +1,250 @@
+---
+title: "Research Paper"
+---
+
+## VayuBench and VayuChat: Executable Benchmarking and Deployment of LLMs for Multi-Dataset Air Quality Analytics
+
+### Authors
+
+**Vedant Acharya**\* • **Abhay Pisharodi**\* • Ratnesh Pasi • Rishabh Mondal • Nipun Batra
+
+*\*Equal contribution*
+
+**Affiliation**: Indian Institute of Technology Gandhinagar, Indian Institute of Information Technology Surat
+
+### Publication
+
+**Conference**: 13th ACM International Conference on Data Science (CODS 2025)
+
+**Location**: IISER, Pune, India
+
+**Date**: December 17-20, 2025
+
+## Abstract
+
+Air pollution causes over 1.6 million premature deaths annually in India. Yet, decision-makers face persistent barriers in turning diverse tabular data on air pollution, population, and funding into actionable insights. Existing tools demand technical expertise, offer shallow visualizations, or rely on static dashboards, leaving policy questions unresolved.
+
+Large language models (LLMs) offer a potential alternative by translating natural-language questions into structured, multi-dataset analyses; however, their reliability for such domain-specific tasks remains unknown.
+
+We present **VayuBench**, to our knowledge, the first executable benchmark for air-quality analytics. It comprises 5,000 natural-language queries paired with verified Python code across seven query categories: spatial, temporal, spatio-temporal, population-based, area-based, funding-related and specific pattern queries over multiple real-world datasets.
+
+We evaluate 13 open-source LLMs under a unified, schema-aware protocol. While Qwen3-Coder-30B attains the strongest performance, frequent column-name and variable errors highlight risks for smaller models.
+
+To bridge evaluation with practice, we deploy **VayuChat**, an interactive assistant that delivers real-time, code-backed analysis for Indian policymakers and citizens. Together, VayuBench and VayuChat demonstrate a reproducible pathway from benchmark to verified execution to deployment, establishing the foundations for trustworthy LLM-driven decision support in environmental monitoring.
+
+## Key Contributions
+
+::: {.feature-grid}
+::: {.feature-card}
+::: {.feature-icon}
+🎯
+:::
+
+### Executable Benchmark
+
+First domain-specific benchmark for air quality analytics, pairing 5,000 natural language queries with verified Python code over multiple real-world datasets and systematically defined complex query categories.
+:::
+
+::: {.feature-card}
+::: {.feature-icon}
+📊
+:::
+
+### Systematic LLM Evaluation
+
+Unified schema-aware prompting protocol with machine-verifiable metrics (exec@1, pass@k), revealing significant capability gaps across 13 models.
+:::
+
+::: {.feature-card}
+::: {.feature-icon}
+⚙️
+:::
+
+### System Deployment
+
+VayuChat, an interactive chatbot demonstrating how VayuBench can translate into accessible, trustworthy decision support for air quality policy and analysis.
+:::
+:::
+
+## Research Context
+
+### The Problem
+
+Air pollution is a severe public health crisis in India, contributing to more than **1.6 million premature deaths annually**. Exposure to fine particulate matter (PM2.5) reduces average life expectancy in India by **over five years**.
+
+Yet, monitoring is only the first step. Turning raw readings into timely, actionable insights for policy remains an unsolved problem:
+
+- **Simple questions are hard**: "How did PM2.5 levels change in Delhi last year?" requires technical expertise
+- **Complex analysis is inaccessible**: "Which cities reduced PM2.5 most relative to their NCAP funding?" requires integrating multiple datasets
+- **Existing tools fall short**: Demand significant technical skills (R, SQL, Python) or offer only limited visualizations
+
+### The Opportunity
+
+Large Language Models (LLMs) have emerged as powerful tools for translating natural language into executable analyses. In principle, an LLM could:
+
+1. Identify the right datasets
+2. Select appropriate statistical operations
+3. Generate correct Python code to produce the answer
+
+But their performance on **domain-specific, multi-dataset environmental analytics** remains unexplored.
+
+### Our Approach
+
+VayuBench provides:
+
+- **Domain grounding**: Built from real Indian environmental data (CPCB, NCAP, Census)
+- **Executable evaluation**: Verified Python code with sandboxed execution
+- **Multi-dataset integration**: Queries require joining pollution, funding, and demographic data
+- **Systematic coverage**: Seven query categories reflecting real policy needs
+
+## Methodology
+
+### Stakeholder-Driven Design
+
+We engaged air-quality scientists, academic researchers, and policy think tanks in semi-structured interviews to identify three essential priorities:
+
+1. **Transparency**: Analytical steps must be verifiable
+2. **Reproducibility**: Outputs must be consistent and checkable
+3. **Accessibility**: Non-technical stakeholders must be able to use the system
+
+These priorities shaped VayuBench's design:
+
+- **Stakeholder Coverage (G1)**: Query types reflect genuine decision-making needs
+- **Executable Reliability (G2)**: Test both syntactic and functional correctness
+- **Extensible Accessibility (G3)**: Framework supports new datasets and questions
+
+### Benchmark Construction Pipeline
+
+::: {.callout-note}
+### Four-Step Process
+
+1. **Seed Question Collection**: 65 base questions grounded in stakeholder needs
+2. **Template Design**: Handcrafted templates with placeholders for valid method-column pairs
+3. **Systematic Expansion**: ~26K candidate queries generated, sampled to 5K for diversity
+4. **Paraphrasing**: LLM paraphrasing + human verification for linguistic variety
+:::
+
+### Evaluation Protocol
+
+**Sampling**: For each query, we sample **n = 5** completions using temperature sampling (temperature = 0.8, top-p = 0.95).
+
+**Metrics**:
+
+- **exec@1**: Proportion of samples that execute without error
+- **pass@k**: Fraction of queries where at least one of the top-k samples passes all tests
+- **Error categorization**: Syntax, Column, Name, Other
+
+**Execution**: Sandboxed subprocess execution with 15-second timeout.
+
+## Results
+
+### Model Performance
+
+- **Best Performance**: Qwen3-Coder-30B achieves **0.99 exec@1** and **0.79 pass@1**
+- **Scaling Effect**: Approximately linear relationship between parameters and performance
+- **Specialization Advantage**: Code-specialized models outperform general LLMs of similar size
+
+### Error Analysis
+
+- **Column errors dominate**: Nearly 50% of failures across models
+- **Schema alignment**: Primary bottleneck, even for top performers
+- **Syntax errors rare**: Only in very small models (< 3B parameters)
+
+### Category-Specific Insights
+
+- **Easiest**: Spatial Aggregation (SA) — Simple groupby operations
+- **Hardest**: Funding-Based (FQ) — Multi-dataset joins required
+- **Most variable**: Spatio-Temporal (STA) — High variance across models
+
+## Impact & Applications
+
+VayuBench enables:
+
+1. **Researchers**: Evaluate LLMs on domain-specific analytics tasks
+2. **Model Developers**: Identify weaknesses (e.g., schema alignment) to improve training
+3. **Policymakers**: Access air quality insights through natural language (via VayuChat)
+4. **Environmental Scientists**: Build trustworthy AI systems for decision support
+
+## Related Work
+
+### Comparison with Existing Benchmarks
+
+| Area | Representative Work | VayuBench Advantage |
+|------|---------------------|---------------------|
+| **Text-to-SQL** | Spider, WikiSQL, CoSQL | Python code (not SQL), multi-dataset integration |
+| **Code Generation** | HumanEval, MBPP, CodeXGLUE | Domain-grounded, policy-relevant queries |
+| **Data Science** | DS-1000 | Multi-table joins, spatio-temporal reasoning |
+| **Table QA** | TAPAS, WikiTableQuestions | Executable code, not just natural language answers |
+| **Environmental Tools** | OpenAQ, Naqi, openair | LLM evaluation, systematic benchmarking |
+
+### Unique Contributions
+
+VayuBench is the **only benchmark** that combines:
+
+- ✅ Domain grounding (environmental data)
+- ✅ Executable Python code evaluation
+- ✅ Multi-dataset integration
+- ✅ Spatio-temporal reasoning
+- ✅ Deployed system (VayuChat)
+
+## Future Work
+
+### Extensions
+
+- **Additional Data Sources**: OpenAQ, WHO Global AQ Database, meteorological data
+- **Multimodal Integration**: Sentinel-5P satellite imagery, NCAP policy documents
+- **Causal Analysis**: Link interventions to outcomes with domain-adaptive models
+
+### Methodological Improvements
+
+- **Domain-Adaptive Finetuning**: Improve schema alignment and reduce column errors
+- **Retrieval-Augmented Generation**: Curated corpora of environmental analyses
+- **Self-Consistency Prompting**: Multiple samples with majority voting
+
+### Evaluation Enhancements
+
+- **Stronger NLU**: Better understanding of complex policy questions
+- **Runtime Checks**: Automated validation using data profiling tools
+- **Fairness Metrics**: Assess equity in pollution exposure and monitoring coverage
+
+## Citation
+
+```bibtex
+@inproceedings{acharya2025vayubench,
+  title={VayuBench and VayuChat: Executable Benchmarking and Deployment of LLMs
+         for Multi-Dataset Air Quality Analytics},
+  author={Acharya, Vedant and Pisharodi, Abhay and Pasi, Ratnesh and
+          Mondal, Rishabh and Batra, Nipun},
+  booktitle={Proceedings of 13th International Conference on Data Science (CODS 2025)},
+  year={2025},
+  organization={ACM}
+}
+```
+
+## Resources
+
+::: {style="margin-top: 2rem;"}
+[Paper PDF (Coming Soon)](#){.btn .btn-primary style="margin-right: 1rem;"}
+[GitHub Repository](https://github.com/sustainability-lab/VayuBench){.btn .btn-secondary style="margin-right: 1rem;" target="_blank"}
+[HuggingFace Dataset](https://huggingface.co/datasets/SustainabilityLabIITGN/VayuBench){.btn .btn-secondary style="margin-right: 1rem;" target="_blank"}
+[VayuChat Demo](https://huggingface.co/spaces/SustainabilityLabIITGN/VayuChat){.btn .btn-secondary target="_blank"}
+:::
+
+## Contact
+
+For questions, collaborations, or feedback:
+
+**Nipun Batra**
+Associate Professor
+Indian Institute of Technology Gandhinagar
+Email: [nipun.batra@iitgn.ac.in](mailto:nipun.batra@iitgn.ac.in)
+
+**Sustainability Lab**
+Website: [https://nipunbatra.github.io/](https://nipunbatra.github.io/)
+
+## Acknowledgments
+
+We thank the air quality scientists, policy analysts, and environmental data practitioners who participated in our stakeholder consultations. Their insights were instrumental in shaping the benchmark categories and evaluation criteria.
+
+This work was supported by IIT Gandhinagar and represents a collaborative effort between computer science, environmental science, and public policy communities.
+

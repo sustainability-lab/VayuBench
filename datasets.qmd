@@ -1,0 +1,285 @@
+---
+title: "Datasets"
+---
+
+VayuBench integrates three real-world datasets to enable comprehensive multi-dataset air quality analytics. These datasets were selected through stakeholder consultations with air quality scientists, policy analysts, and environmental data practitioners.
+
+## Dataset Overview
+
+::: {.stats-grid}
+::: {.stat-card}
+<div class="stat-number">2.3M+</div>
+<div class="stat-label">Air Quality Records</div>
+:::
+
+::: {.stat-card}
+<div class="stat-number">31</div>
+<div class="stat-label">States & UTs</div>
+:::
+
+::: {.stat-card}
+<div class="stat-number">117</div>
+<div class="stat-label">NCAP-Funded Cities</div>
+:::
+
+::: {.stat-card}
+<div class="stat-number">7</div>
+<div class="stat-label">Years of Data</div>
+:::
+:::
+
+## 1. CPCB Air Quality Data {#cpcb-data}
+
+::: {.badge}
+2017-2024
+:::
+::: {.badge}
+Daily Frequency
+:::
+::: {.badge .badge-success}
+500+ Stations
+:::
+
+**Source**: Central Pollution Control Board (CPCB), Government of India
+
+Daily station-level measurements of PM2.5 and PM10 from India's National Air Monitoring Programme (NAMP). This dataset enables detailed spatial, temporal, and spatio-temporal analysis of air quality trends across India.
+
+### Schema
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `Timestamp` | datetime64[ns] | Measurement date and time |
+| `station` | object | Monitoring station name |
+| `PM2.5` | float64 | Fine particulate matter concentration (µg/m³) |
+| `PM10` | float64 | Coarse particulate matter concentration (µg/m³) |
+| `address` | object | Station address |
+| `city` | object | City name |
+| `latitude` | float64 | Station latitude coordinate |
+| `longitude` | float64 | Station longitude coordinate |
+| `state` | object | State or union territory name |
+
+### Example Data
+
+```python
+import pandas as pd
+data = pd.read_pickle("preprocessed/main_data.pkl")
+print(data.head())
+```
+
+```
+   Timestamp              station  PM2.5  PM10        city       state
+0  2023-05-01  Anand Vihar, Delhi  156.2  298.5      Delhi       Delhi
+1  2023-05-01  R K Puram, Delhi    142.8  275.3      Delhi       Delhi
+2  2023-05-01  Worli, Mumbai        45.3   89.7     Mumbai  Maharashtra
+3  2023-05-01  Silk Board, Bengaluru 52.1   95.4  Bengaluru   Karnataka
+4  2023-05-01  Mandir Marg, Delhi  138.9  262.1      Delhi       Delhi
+```
+
+### Data Collection
+
+Air quality data is automatically downloaded from CPCB daily bulletins using the provided `aqi_downloader.ipynb` notebook. The notebook:
+
+1. Downloads daily AQI bulletins (PDF format) from CPCB website
+2. Extracts tabular data using pdfplumber
+3. Handles 4 different table format variations
+4. Normalizes city names and removes duplicates
+5. Exports to efficient parquet format
+
+::: {.callout-note}
+### Accessing Fresh Data
+
+To download the latest CPCB data:
+
+```bash
+jupyter notebook aqi_downloader.ipynb
+```
+
+The notebook uses parallel downloads (48 workers) to efficiently fetch data from 2016-2025.
+:::
+
+## 2. NCAP Funding Data {#ncap-data}
+
+::: {.badge}
+2019-2022
+:::
+::: {.badge}
+117 Cities
+:::
+::: {.badge .badge-warning}
+City-Level
+:::
+
+**Source**: National Clean Air Programme (NCAP), Ministry of Environment, Forest and Climate Change
+
+City-level funding allocations and utilization under NCAP. This dataset enables analysis of the relationship between financial interventions and air quality outcomes, critical for policy accountability.
+
+### Schema
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `S. No.` | int64 | Serial number |
+| `state` | object | State or union territory |
+| `city` | object | NCAP-funded city name |
+| `Amount released during FY 2019-20` | float64 | Funding in FY 2019-2020 (₹ crores) |
+| `Amount released during FY 2020-21` | float64 | Funding in FY 2020-2021 (₹ crores) |
+| `Amount released during FY 2021-22` | float64 | Funding in FY 2021-2022 (₹ crores) |
+| `Total fund released` | float64 | Total allocated funds (₹ crores) |
+| `Utilisation as on June 2022` | float64 | Funds utilized as of June 2022 (₹ crores) |
+
+### Example Data
+
+```python
+import pandas as pd
+ncap = pd.read_pickle("preprocessed/ncap_funding_data.pkl")
+print(ncap.head())
+```
+
+```
+   S. No.     state       city  FY 2019-20  FY 2020-21  FY 2021-22  Total  Utilisation
+0       1     Delhi      Delhi       45.50       52.30       58.20  156.00       142.35
+1       2     Delhi   Faridabad       12.25       15.80       18.40   46.45        38.92
+2       3  Haryana     Gurgaon       11.80       14.50       17.20   43.50        35.18
+3       4    Punjab  Amritsar        8.90       11.20       13.50   33.60        28.45
+4       5    Punjab  Ludhiana        9.50       12.40       14.80   36.70        31.22
+```
+
+### About NCAP
+
+The National Clean Air Programme (NCAP), launched in 2019, has released over ₹9,650 crore to 131 non-attainment cities between FY 2019–20 and FY 2023–24 to improve urban air quality. VayuBench uses funding data to enable queries like:
+
+- "Which financial year had the highest average fund release?"
+- "Which cities improved PM2.5 most relative to their funding?"
+- "What is the utilization rate across different states?"
+
+## 3. State Demographics Data {#demographics-data}
+
+::: {.badge}
+31 States/UTs
+:::
+::: {.badge .badge-success}
+Population & Area
+:::
+
+**Source**: Census of India and official state records
+
+Population, geographical area, and union territory status for all Indian states and union territories. This dataset enables population-weighted and area-normalized air quality analysis for equity assessment.
+
+### Schema
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `state` | object | Indian state or union territory name |
+| `population` | int64 | Total population count |
+| `area (km2)` | int64 | Geographical area in square kilometers |
+| `isUnionTerritory` | bool | Whether the region is a union territory |
+
+### Example Data
+
+```python
+import pandas as pd
+states = pd.read_pickle("preprocessed/states_data.pkl")
+print(states.head(10))
+```
+
+```
+           state  population  area (km2)  isUnionTerritory
+0  Uttar Pradesh   199812341      240928             False
+1    Maharashtra   112374333      307713             False
+2          Bihar   104099452       94163             False
+3   West Bengal    91276115       88752             False
+4  Madhya Pradesh   72626809      308245             False
+5     Tamil Nadu    72147030      130060             False
+6      Rajasthan    68548437      342239             False
+7      Karnataka    61095297      191791             False
+8        Gujarat    60439692      196244             False
+9  Andhra Pradesh   49577103      162968             False
+```
+
+### Use Cases
+
+The demographics dataset enables queries that assess exposure burden and monitoring coverage:
+
+- **Population-Based**: "Which state has the highest population-weighted PM2.5 exposure?"
+- **Area-Based**: "Which state has the fewest monitoring stations per square kilometer?"
+- **Equity Analysis**: "What percentage of India's population lives in regions exceeding WHO PM2.5 limits?"
+
+## Dataset Integration
+
+VayuBench's power comes from **multi-dataset integration**. Many queries require joining all three datasets:
+
+::: {.callout-note}
+### Example: Multi-Dataset Query
+
+**Question**: "Which state has the highest number of monitoring stations relative to its population?"
+
+**Required Datasets**:
+1. **CPCB Data** → Count unique stations per state
+2. **Demographics Data** → Get population per state
+3. **Join Operation** → Calculate stations per million people
+
+**Code**:
+```python
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    # Count stations per state
+    station_counts = data.groupby('state')['station'].nunique().reset_index()
+    # Merge with demographics
+    merged = station_counts.merge(states_data, on='state', how='inner')
+    # Calculate metric
+    merged['stations_per_million'] = merged['station'] / (merged['population'] / 1e6)
+    # Get top state
+    return merged.sort_values('stations_per_million').iloc[-1]['state']
+```
+:::
+
+## Data Access
+
+All preprocessed datasets are available in the repository:
+
+```bash
+VayuBench/
+├── preprocessed/
+│   ├── main_data.pkl      # CPCB air quality (2017-2024)
+│   ├── states_data.pkl    # State demographics
+│   └── ncap_funding_data.pkl  # NCAP funding (2019-2022)
+```
+
+**Loading data**:
+
+```python
+import pandas as pd
+
+# Load all three datasets
+data = pd.read_pickle("preprocessed/main_data.pkl")
+states_data = pd.read_pickle("preprocessed/states_data.pkl")
+ncap_funding_data = pd.read_pickle("preprocessed/ncap_funding_data.pkl")
+
+# Explore
+print(f"Air quality records: {len(data):,}")
+print(f"States/UTs: {len(states_data)}")
+print(f"NCAP cities: {len(ncap_funding_data)}")
+```
+
+## Data Quality
+
+All datasets have been cleaned and validated:
+
+- **Completeness**: Missing values handled appropriately (e.g., `dropna()` for pollutant values)
+- **Consistency**: City and state names normalized (e.g., "Gurgaon" → "Gurugram")
+- **Accuracy**: Duplicate records removed by Date-City combinations
+- **Temporal Coverage**: Daily data spans 2017-2024 with minimal gaps
+
+::: {.callout-warning}
+### Data Limitations
+
+- **CPCB Data**: Station coverage varies by state; some regions have sparse monitoring
+- **NCAP Funding**: Limited to 131 non-attainment cities (FY 2019-2024)
+- **Demographics**: Population figures based on projections from 2011 Census
+:::
+
+## Download
+
+::: {style="margin-top: 2rem;"}
+[Download from HuggingFace](https://huggingface.co/datasets/SustainabilityLabIITGN/VayuBench){.btn .btn-primary target="_blank"}
+[View on GitHub](https://github.com/sustainability-lab/VayuBench){.btn .btn-secondary target="_blank"}
+:::

@@ -1,0 +1,51 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "VayuBench"
+  description: "Executable Benchmarking of LLMs for Multi-Dataset Air Quality Analytics"
+
+  navbar:
+    background: primary
+    search: true
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Datasets"
+        href: datasets.qmd
+      - text: "Categories"
+        href: categories.qmd
+      - text: "Getting Started"
+        href: getting-started.qmd
+      - text: "Results"
+        href: results.qmd
+      - text: "Paper"
+        href: paper.qmd
+    right:
+      - icon: github
+        href: https://github.com/sustainability-lab/VayuBench
+      - icon: database
+        href: https://huggingface.co/datasets/SustainabilityLabIITGN/VayuBench
+
+  page-footer:
+    left: "VayuBench - Sustainability Lab, IIT Gandhinagar"
+    right:
+      - icon: github
+        href: https://github.com/sustainability-lab/VayuBench
+      - text: "License"
+        href: https://github.com/sustainability-lab/VayuBench/blob/main/LICENSE
+
+format:
+  html:
+    theme:
+      - flatly
+      - custom.scss
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-overflow: wrap
+    link-external-newwindow: true
+
+execute:
+  freeze: auto

@@ -1,0 +1,282 @@
+---
+title: "Benchmark Results"
+---
+
+We evaluated 13 open-source LLMs on VayuBench using a unified, schema-aware protocol. Results reveal substantial performance variation across models and highlight column errors as the primary failure mode.
+
+## Evaluation Metrics
+
+::: {.feature-grid}
+::: {.feature-card}
+### exec@1
+**Syntactic Correctness**
+
+Proportion of code samples that execute without errors, regardless of whether the output is correct. Measures the model's ability to generate runnable Python code with valid syntax, correct imports, and proper API usage.
+:::
+
+::: {.feature-card}
+### pass@k
+**Functional Correctness**
+
+Probability that at least k out of n samples produce the correct output. Uses an unbiased estimator:
+
+$$\text{pass@k} = 1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}$$
+
+where n = total samples, c = correct samples.
+:::
+
+::: {.feature-card}
+### Error Rate
+**Failure Analysis**
+
+Proportion of failed executions, categorized by error type:
+
+- **Column**: Incorrect/misspelt column names
+- **Syntax**: Python grammar violations
+- **Name**: Undefined variables/objects
+- **Other**: Miscellaneous (timeout, division by zero)
+:::
+:::
+
+## Overall Performance
+
+### Top Performers
+
+| Model | Params | exec@1 ↑ | pass@1 ↑ | pass@2 ↑ | Error Rate ↓ |
+|-------|-------:|:--------:|:--------:|:--------:|:------------:|
+| **Qwen3-Coder-30B** 🥇 | 30B | **0.99** | **0.79** | **0.81** | 0.01 |
+| **Qwen3-32B** 🥈 | 32B | 0.98 | 0.78 | 0.81 | 0.01 |
+| **Qwen2.5-Coder-14B** 🥉 | 14B | 0.90 | 0.69 | 0.74 | 0.06 |
+| GPT-OSS-20B | 20B | 0.88 | 0.56 | 0.69 | 0.12 |
+| Qwen2.5-Coder-7B | 7B | 0.79 | 0.41 | 0.54 | 0.20 |
+| DeepSeek-Coder-6.7B | 6.7B | 0.77 | 0.48 | 0.54 | 0.23 |
+| Qwen2.5-Coder-3B | 3B | 0.73 | 0.33 | 0.47 | 0.26 |
+| CodeLlama-13B | 13B | 0.64 | 0.25 | 0.32 | 0.36 |
+| Qwen3-1.7B | 1.7B | 0.46 | 0.05 | 0.08 | 0.54 |
+| Qwen2.5-Coder-1.5B | 1.5B | 0.47 | 0.08 | 0.12 | 0.53 |
+| Mistral-7B | 7B | 0.24 | 0.03 | 0.05 | 0.76 |
+| Llama3.2-3B | 3B | 0.17 | 0.04 | 0.07 | 0.83 |
+| Llama3.2-1B | 1B | 0.04 | 0.00 | 0.01 | 0.97 |
+
+::: {.callout-note}
+### Key Observations
+
+**Top 3 Models**: All achieve exec@1 > 0.90 and pass@1 > 0.69, demonstrating strong code generation capabilities for structured analytics. Qwen3-Coder-30B sets the benchmark at 0.99 exec@1 and 0.79 pass@1.
+
+**Model Size Matters**: Performance shows approximately linear relationship with parameters. Qwen models at 30-32B params dominate, while 1-3B models struggle (exec@1 < 0.5).
+
+**Specialization Wins**: Code-specialized models (Qwen2.5-Coder series, DeepSeek-Coder) significantly outperform general-purpose LLMs of similar size.
+:::
+
+## Category-Wise Performance
+
+### Best Models per Category
+
+| Category | Top Model | exec@1 | pass@1 | Characteristics |
+|----------|-----------|:------:|:------:|-----------------|
+| **Spatial Aggregation (SA)** | Qwen3-Coder-30B | 1.00 | 0.98 | Simple groupby + aggregation |
+| **Spatio-Temporal (STA)** | Qwen3-32B | 0.99 | 0.54 | Multi-period comparisons harder |
+| **Temporal Trends (TT)** | Qwen3-Coder-30B | 1.00 | 0.76 | Date-time manipulation required |
+| **Funding-Based (FQ)** | Qwen3-Coder-30B | 1.00 | 0.46 | Multi-dataset joins challenging |
+| **Population-Based (PB)** | Qwen3-32B | 0.94 | 0.73 | Weighted calculations needed |
+| **Area-Based (AB)** | Qwen3-Coder-30B | 1.00 | 0.87 | Area normalization |
+| **Specific Patterns (SP)** | Qwen2.5-Coder-14B | 0.98 | 0.63 | Threshold detection |
+
+### Full Category Breakdown
+
+::: {.callout-warning}
+The table below shows **exec@1** (E1), **pass@1** (P1), and **pass@2** (P2) for each model across all 7 categories. This data reveals model-specific strengths and weaknesses.
+:::
+
+<details>
+<summary><strong>Click to expand full category-wise results</strong></summary>
+
+| Model | AB (E1/P1/P2) | FQ (E1/P1/P2) | PB (E1/P1/P2) | SA (E1/P1/P2) | STA (E1/P1/P2) | SP (E1/P1/P2) | TT (E1/P1/P2) |
+|-------|:-------------:|:-------------:|:-------------:|:-------------:|:--------------:|:-------------:|:-------------:|
+| **Qwen3-Coder-30B** | 1.00/0.87/0.90 | 1.00/0.46/0.53 | 0.95/0.80/0.85 | 1.00/0.98/0.98 | 1.00/0.50/0.53 | 0.81/0.56/0.60 | 1.00/0.76/0.78 |
+| **Qwen3-32B** | 0.96/0.85/0.90 | 0.96/0.51/0.61 | 0.94/0.73/0.82 | 0.99/0.96/0.98 | 0.99/0.54/0.58 | 0.98/0.53/0.59 | 0.99/0.66/0.68 |
+| **Qwen2.5-Coder-14B** | 0.97/0.85/0.92 | 0.96/0.32/0.43 | 0.89/0.64/0.75 | 0.98/0.94/0.96 | 0.90/0.34/0.41 | 0.98/0.63/0.70 | 0.86/0.47/0.58 |
+| GPT-OSS-20B | 0.77/0.57/0.80 | 0.90/0.34/0.48 | 0.81/0.53/0.72 | 0.89/0.78/0.93 | 0.88/0.26/0.37 | 0.81/0.06/0.08 | 0.91/0.44/0.56 |
+| DeepSeek-Coder-6.7B | 0.86/0.36/0.46 | 0.83/0.12/0.17 | 0.83/0.18/0.24 | 0.78/0.70/0.76 | 0.72/0.21/0.25 | 0.92/0.43/0.48 | 0.73/0.41/0.46 |
+
+</details>
+
+## Error Analysis
+
+### Error Type Distribution
+
+Column errors dominate across all models, accounting for nearly 50% of failures. This indicates that **schema alignment** (matching variable/field names correctly) remains the primary bottleneck.
+
+| Model | Syntax | Column | Name | Other | Total Error Rate |
+|-------|:------:|:------:|:----:|:-----:|:----------------:|
+| Llama3.2-1B | **0.58** | 0.25 | 0.12 | 0.02 | **0.97** |
+| Llama3.2-3B | 0.00 | 0.20 | **0.62** | 0.01 | 0.83 |
+| Mistral-7B | 0.17 | **0.56** | 0.00 | 0.03 | 0.76 |
+| Qwen2.5-Coder-1.5B | 0.02 | **0.49** | 0.01 | 0.01 | 0.53 |
+| Qwen3-1.7B | 0.02 | **0.49** | 0.01 | 0.01 | 0.54 |
+| CodeLlama-13B | 0.00 | **0.35** | 0.00 | 0.00 | 0.36 |
+| Qwen2.5-Coder-3B | 0.00 | **0.25** | 0.00 | 0.01 | 0.26 |
+| DeepSeek-Coder-6.7B | 0.00 | **0.19** | 0.00 | 0.03 | 0.23 |
+| Qwen2.5-Coder-7B | 0.00 | **0.20** | 0.00 | 0.00 | 0.20 |
+| GPT-OSS-20B | 0.03 | 0.06 | 0.03 | 0.00 | 0.12 |
+| Qwen2.5-Coder-14B | 0.00 | **0.05** | 0.00 | 0.01 | 0.06 |
+| Qwen3-32B | 0.00 | **0.01** | 0.00 | 0.00 | 0.01 |
+| Qwen3-Coder-30B | 0.00 | **0.01** | 0.00 | 0.00 | 0.01 |
+
+::: {.callout-important}
+### Common Error Patterns
+
+**Column Errors** (Most Common):
+- Misspelling: `PM25` instead of `PM2.5`
+- Wrong column: Using `city` when `state` is needed
+- Non-existent column: Referencing fields not in schema
+
+**Syntax Errors** (Rare in large models):
+- Unmatched brackets/parentheses
+- Invalid indentation
+- Incomplete code blocks
+
+**Name Errors** (Mid-sized models):
+- Missing imports (`pd.DataFrame` without `import pandas as pd`)
+- Undefined variables
+- Incorrect function calls
+
+**Other Errors**:
+- Timeout (exceeds 15s execution)
+- Division by zero
+- Type mismatches
+:::
+
+### Example Errors from Real LLM Outputs
+
+::: {.callout-note}
+### Example 1: Column Error (Spatial Aggregation)
+
+**Question**: "On March 31, 2023, which state had the 3rd-lowest 25th percentile for PM10?"
+
+**Expected Answer**: `"Haryana"`
+
+**LLM Output**: `31.3582` (a numerical value)
+
+**Error**: Model computed the percentile value instead of returning the state name.
+
+**Code Comparison**:
+
+```python
+# LLM (Wrong) - Returns numerical value
+third_lowest_percentile = state_percentiles.nsmallest(3).iloc[2]
+return third_lowest_percentile  # Returns 31.3582
+
+# Correct - Returns state name
+return data.iloc[2]["state"]  # Returns "Haryana"
+```
+:::
+
+::: {.callout-note}
+### Example 2: Aggregation Error (Area-Based)
+
+**Question**: "UT area with 3rd max PM2.5+PM10."
+
+**Expected Answer**: `42241`
+
+**LLM Error**: Grouped by `city` instead of `state`
+
+**Code Comparison**:
+
+```python
+# LLM (Wrong) - Groups by city
+city_pollution = data.groupby('city')[['PM2.5','PM10']].sum()
+
+# Correct - Groups by state for UTs
+state_averages = main_data.groupby('state')[['PM2.5','PM10']].mean()
+```
+:::
+
+## Key Findings
+
+::: {.feature-grid}
+::: {.feature-card}
+### 🎯 Scaling Improves Reliability
+
+Larger models dominate across all metrics. Qwen3-Coder-30B achieves **0.99 exec@1** and **0.79 pass@1**, while 1-3B models struggle with exec@1 < 0.5. Performance shows approximately linear relationship with parameters.
+:::
+
+::: {.feature-card}
+### ⚙️ Specialization Matters
+
+Code-specialized models (Qwen2.5-Coder, DeepSeek-Coder) significantly outperform general LLMs of similar size. Qwen2.5-Coder-14B (0.90 exec@1) beats Mistral-7B (0.24 exec@1) despite only 2x more parameters.
+:::
+
+::: {.feature-card}
+### ❌ Column Errors Dominate
+
+Schema alignment remains the primary bottleneck, accounting for **nearly 50%** of failures across models. Even top performers like Qwen3-Coder-30B show column errors, suggesting this is a fundamental challenge.
+:::
+
+::: {.feature-card}
+### 📉 General Models Lag
+
+General-purpose models (Mistral, Llama-3.2) consistently underperform. Llama3.2-1B achieves only **0.04 exec@1** and **0.00 pass@1**, highlighting limited zero-shot transfer without code tuning.
+:::
+:::
+
+## Model Biases
+
+Interestingly, different models show distinct inductive biases:
+
+- **Qwen2.5-Coder-14B** excels at **Specific Patterns (SP)** with 0.98 exec@1 despite weaker overall pass@1
+- **GPT-OSS-20B** struggles with **Specific Patterns** (only 0.06 pass@1) but performs well on **Spatial Aggregation**
+- **DeepSeek-Coder-6.7B** shows balanced performance across categories despite smaller size
+
+This suggests that model architecture and training data composition significantly impact performance on different query types.
+
+## Comparison with Other Benchmarks
+
+| Benchmark | Domain | exec@1 (Best Model) | pass@1 (Best Model) | Multi-Dataset | Spatio-Temporal |
+|-----------|--------|:-------------------:|:-------------------:|:-------------:|:---------------:|
+| HumanEval | General | ~0.95 | ~0.85 | ✗ | ✗ |
+| MBPP | General | ~0.90 | ~0.80 | ✗ | ✗ |
+| DS-1000 | Data Science | ~0.85 | ~0.65 | ✗ | ✗ |
+| **VayuBench** | Air Quality | **0.99** | **0.79** | ✓ | ✓ |
+
+VayuBench's top performance (Qwen3-Coder-30B) is comparable to general coding benchmarks, but the domain-specific, multi-dataset nature makes it uniquely challenging for smaller models.
+
+## Recommendations
+
+Based on our evaluation results:
+
+### For Production Deployment
+
+- **Use Qwen3-Coder-30B or Qwen3-32B** for high-stakes applications requiring reliable code generation
+- Implement **validation layers** to catch column name errors (most common failure mode)
+- Use **pass@k with k>1** to increase reliability through multiple samples
+
+### For Research
+
+- **Focus on schema alignment**: Develop techniques to improve column name accuracy
+- **Investigate model biases**: Why do different models excel at different categories?
+- **Explore hybrid approaches**: Combine LLM code generation with symbolic reasoning
+
+### For Budget-Constrained Applications
+
+- **Qwen2.5-Coder-14B** offers the best performance/cost tradeoff (0.90 exec@1, 0.69 pass@1)
+- **DeepSeek-Coder-6.7B** is viable for less critical applications (0.77 exec@1, 0.48 pass@1)
+- Avoid general-purpose models < 10B parameters for code generation tasks
+
+## Reproducibility
+
+All results are fully reproducible:
+
+1. **Models**: All evaluated models are open-source and available on HuggingFace
+2. **Data**: Preprocessed datasets included in repository
+3. **Code**: Evaluation scripts (`eval_pipeline.py`, `code_eval_utils.py`) provided
+4. **Prompts**: System prompt (`system_prompt.txt`) standardized across models
+
+See [Getting Started](getting-started.qmd) for instructions to reproduce these results.
+
+## Next Steps
+
+- Explore [Categories](categories.qmd) to understand what makes each query type challenging
+- Read the [Paper](paper.qmd) for detailed methodology and analysis
+- Try [VayuChat](https://huggingface.co/spaces/SustainabilityLabIITGN/VayuChat) to see the benchmark in action
+

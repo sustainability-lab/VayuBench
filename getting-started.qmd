@@ -1,0 +1,404 @@
+---
+title: "Getting Started"
+---
+
+This guide will help you set up VayuBench, generate LLM responses, and evaluate model performance on air quality analytics tasks.
+
+## Prerequisites
+
+- Python 3.8 or higher
+- CUDA-capable GPU (recommended for running LLMs)
+- 16GB+ RAM (32GB recommended for larger models)
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/sustainability-lab/VayuBench.git
+cd VayuBench
+```
+
+### 2. Install Dependencies
+
+```bash
+# Create virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install required packages
+pip install torch transformers pandas numpy scikit-learn
+pip install accelerate bitsandbytes sentencepiece
+pip install jupyter matplotlib seaborn  # For data exploration
+```
+
+### 3. Verify Installation
+
+```bash
+python -c "import torch; print(f'PyTorch: {torch.__version__}')"
+python -c "import transformers; print(f'Transformers: {transformers.__version__}')"
+```
+
+## Repository Structure
+
+```
+VayuBench/
+├── preprocessed/              # Processed datasets (ready to use)
+│   ├── main_data.pkl         # CPCB air quality (2017-2024)
+│   ├── states_data.pkl       # State demographics
+│   └── ncap_funding_data.pkl # NCAP funding (2019-2022)
+│
+├── templates/                 # 67 JSON templates for question generation
+│   ├── 1.json - 73.json
+│
+├── questions.csv              # 10,034 benchmark questions + metadata
+│
+├── batch_generation.py        # Generate LLM responses
+├── eval_pipeline.py          # Evaluate generated code
+├── code_eval_utils.py        # Core evaluation utilities
+├── aqi_downloader.ipynb      # Download fresh CPCB data
+├── system_prompt.txt         # LLM system prompt
+└── run.sh                    # Automated execution script
+```
+
+## Quick Start
+
+### Option 1: Use Preprocessed Data (Fastest)
+
+The repository includes preprocessed datasets, so you can start immediately:
+
+```python
+import pandas as pd
+
+# Load datasets
+data = pd.read_pickle("preprocessed/main_data.pkl")
+states_data = pd.read_pickle("preprocessed/states_data.pkl")
+ncap_funding_data = pd.read_pickle("preprocessed/ncap_funding_data.pkl")
+
+# Explore
+print(f"Air quality records: {len(data):,}")
+print(f"Date range: {data['Timestamp'].min()} to {data['Timestamp'].max()}")
+print(f"States covered: {data['state'].nunique()}")
+print(f"Cities covered: {data['city'].nunique()}")
+```
+
+### Option 2: Download Fresh Data
+
+To get the latest CPCB data:
+
+```bash
+jupyter notebook aqi_downloader.ipynb
+```
+
+Follow the notebook instructions to download and process recent bulletins.
+
+## Generating LLM Responses
+
+### Single Model Evaluation
+
+Generate responses for a specific model:
+
+```bash
+python batch_generation.py \
+    --model_name "Qwen/Qwen2.5-Coder-14B-Instruct" \
+    --questions_file questions.csv \
+    --batch_size 10 \
+    --num_samples 5
+```
+
+**Parameters**:
+- `--model_name`: HuggingFace model identifier
+- `--questions_file`: Path to benchmark questions (default: `questions.csv`)
+- `--batch_size`: Number of questions to process at once (default: 10)
+- `--num_samples`: Samples per question for pass@k (default: 5)
+
+**Output**: Responses saved to `responses/{model_name}/{category}/{question_id}/response.json`
+
+### Customizing Generation
+
+Edit `batch_generation.py` to modify generation parameters:
+
+```python
+# Generation settings
+generation_config = {
+    "max_new_tokens": 512,
+    "temperature": 0.7,    # Adjust for more/less randomness
+    "top_p": 0.9,          # Nucleus sampling
+    "do_sample": True,     # Enable sampling
+}
+```
+
+### Supported Models
+
+VayuBench has been tested with:
+
+- **Qwen Family**: Qwen2.5-Coder (1.5B, 3B, 7B, 14B), Qwen3-Coder-30B, Qwen3-32B
+- **DeepSeek**: DeepSeek-Coder-6.7B
+- **CodeLlama**: CodeLlama-13B
+- **Llama**: Llama3.2 (1B, 3B)
+- **Mistral**: Mistral-7B
+- **GPT-OSS**: GPT-OSS-20B
+
+::: {.callout-note}
+### Memory Requirements
+
+| Model Size | GPU Memory | Recommended GPU |
+|------------|------------|-----------------|
+| 1-3B | 8-12 GB | RTX 3060, RTX 4060 |
+| 7-14B | 16-24 GB | RTX 3090, RTX 4090, A40 |
+| 20-32B | 32-48 GB | A100 40GB, A100 80GB |
+
+*With 4-bit quantization (BitsAndBytes)*
+:::
+
+## Evaluating Performance
+
+### Run Evaluation Pipeline
+
+Evaluate generated responses against ground truth:
+
+```bash
+python eval_pipeline.py \
+    --model_name "Qwen/Qwen2.5-Coder-14B-Instruct" \
+    --starts 0 \
+    --ends 5000
+```
+
+**Parameters**:
+- `--model_name`: Model to evaluate (must match generation step)
+- `--starts`: Starting question index (default: 0)
+- `--ends`: Ending question index (default: 5000)
+
+**Output**: Results saved to `results_chunk/{model_name}/{start}_{end}/{question_id}/result.json`
+
+### Chunked Evaluation
+
+For large-scale evaluation, process in chunks:
+
+```bash
+# Process questions 0-1000
+python eval_pipeline.py --model_name "Qwen/Qwen2.5-Coder-14B-Instruct" --starts 0 --ends 1000
+
+# Process questions 1000-2000
+python eval_pipeline.py --model_name "Qwen/Qwen2.5-Coder-14B-Instruct" --starts 1000 --ends 2000
+
+# Continue...
+```
+
+### Understanding Results
+
+The evaluation pipeline computes:
+
+1. **exec@1**: Proportion of samples that execute without errors
+2. **pass@1**: Probability that at least 1 sample produces correct output
+3. **pass@2**: Probability that at least 2 samples produce correct output
+4. **Error breakdown**: Categorized by type (Column, Syntax, Name, Other)
+
+**Example output**:
+
+```json
+{
+  "question_id": 1,
+  "category": "spatial_aggregation",
+  "exec@1": 0.80,
+  "pass@1": 0.60,
+  "pass@2": 0.75,
+  "errors": {
+    "Column": 0.20,
+    "Syntax": 0.00,
+    "Name": 0.00,
+    "Other": 0.00
+  }
+}
+```
+
+## Full Pipeline Automation
+
+Run the complete generation + evaluation pipeline:
+
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+The `run.sh` script:
+1. Iterates through multiple models
+2. Generates responses with `batch_generation.py`
+3. Evaluates with `eval_pipeline.py`
+4. Saves logs to `pipeline_logs.txt`
+
+Edit `run.sh` to customize the model list:
+
+```bash
+# Define models to evaluate
+MODELS=(
+    "Qwen/Qwen2.5-Coder-14B-Instruct"
+    "Qwen/Qwen3-Coder-30B-Instruct"
+    "codellama/CodeLlama-13b-Instruct-hf"
+)
+```
+
+## System Prompt
+
+All models are evaluated using a standardized schema-aware system prompt (`system_prompt.txt`):
+
+```
+You are an air quality expert Python code generator.
+You need to act on 3 dataframes based on the query to answer questions about air quality.
+
+1. `data` - Air quality data from India (2017-2024)
+   Columns: Timestamp, station, PM2.5, PM10, address, city, latitude, longitude, state
+
+2. `states_data` - State-wise population, area and union territory status
+   Columns: state, population, area (km2), isUnionTerritory
+
+3. `ncap_funding_data` - NCAP funding allocations (2019-2022)
+   Columns: S. No., state, city, Amount released during FY 2019-20/2020-21/2021-22,
+            Total fund released, Utilisation as on June 2022
+
+Function signature:
+def get_response(data: pd.DataFrame, states_data: pd.DataFrame,
+                 ncap_funding_data: pd.DataFrame):
+    # Your code here
+    return single_value  # Not DataFrames, tuples, or plots
+```
+
+## Example Usage
+
+### Testing a Single Question
+
+```python
+import pandas as pd
+import numpy as np
+
+# Load datasets
+data = pd.read_pickle("preprocessed/main_data.pkl")
+states_data = pd.read_pickle("preprocessed/states_data.pkl")
+ncap_funding_data = pd.read_pickle("preprocessed/ncap_funding_data.pkl")
+
+# Define your LLM-generated function
+def get_response(data, states_data, ncap_funding_data):
+    import pandas as pd
+    filtered = data[(data['Timestamp'].dt.year == 2023) &
+                     (data['Timestamp'].dt.month == 5)]
+    grouped = filtered.groupby("state")["PM2.5"].mean()
+    grouped = grouped.dropna()
+    sorted_data = grouped.sort_values()
+    return sorted_data.index[-1]
+
+# Test it
+result = get_response(data, states_data, ncap_funding_data)
+print(f"Answer: {result}")
+```
+
+### Analyzing Error Patterns
+
+```python
+import json
+import glob
+from collections import Counter
+
+# Load all results for a model
+result_files = glob.glob("results_chunk/Qwen-2.5-Coder-14B/**/*.json", recursive=True)
+
+errors = []
+for file in result_files:
+    with open(file) as f:
+        result = json.load(f)
+        if result.get('error_type'):
+            errors.append(result['error_type'])
+
+# Count error types
+error_counts = Counter(errors)
+print("Error distribution:")
+for error_type, count in error_counts.most_common():
+    print(f"  {error_type}: {count} ({count/len(errors)*100:.1f}%)")
+```
+
+## Advanced Usage
+
+### Custom Evaluation Metrics
+
+Extend `code_eval_utils.py` to add custom metrics:
+
+```python
+def evaluate_with_custom_metric(test_case, candidates):
+    """Add custom evaluation logic"""
+    results = []
+    for candidate in candidates:
+        passed, executed, output, error_type, _ = execute_code_sample(
+            candidate, test_case
+        )
+        # Add custom analysis here
+        results.append({
+            'passed': passed,
+            'executed': executed,
+            'custom_score': your_custom_metric(output)
+        })
+    return results
+```
+
+### Filtering by Category
+
+Evaluate only specific categories:
+
+```python
+import pandas as pd
+
+# Load questions
+questions = pd.read_csv("questions.csv")
+
+# Filter for spatial aggregation only
+sa_questions = questions[questions['category'] == 'spatial_aggregation']
+sa_questions.to_csv("questions_sa.csv", index=False)
+
+# Run evaluation on filtered set
+# python batch_generation.py --questions_file questions_sa.csv
+```
+
+## Troubleshooting
+
+### Out of Memory
+
+**Problem**: CUDA out of memory during generation
+
+**Solutions**:
+1. Enable 4-bit quantization (already enabled in `batch_generation.py`)
+2. Reduce `batch_size`:
+   ```bash
+   python batch_generation.py --batch_size 5
+   ```
+3. Use smaller model variant
+
+### Slow Evaluation
+
+**Problem**: Evaluation takes too long
+
+**Solutions**:
+1. Use chunked processing with `--starts` and `--ends`
+2. Reduce timeout in `code_eval_utils.py`:
+   ```python
+   execute_code_sample(candidate, test_case, timeout=10)  # Default: 15s
+   ```
+3. Use parallel workers (already enabled with `num_workers=8`)
+
+### Import Errors
+
+**Problem**: Missing imports in generated code
+
+**Issue**: LLM forgot to include necessary libraries
+
+**Fix**: This is a model error counted in evaluation. No fix needed; it's part of what we measure.
+
+## Next Steps
+
+- Learn about the [Datasets](datasets.qmd) used in VayuBench
+- Explore the [Categories](categories.qmd) of benchmark questions
+- View [Results](results.qmd) from our LLM evaluation
+
+## Getting Help
+
+- **GitHub Issues**: [Report bugs or ask questions](https://github.com/sustainability-lab/VayuBench/issues)
+- **Email**: nipun.batra@iitgn.ac.in
+- **Paper**: See [Paper](paper.qmd) for detailed methodology
+
