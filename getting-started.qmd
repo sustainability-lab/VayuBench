@@ -107,6 +107,7 @@ python batch_generation.py \
 ```
 
 **Parameters**:
+
 - `--model_name`: HuggingFace model identifier
 - `--questions_file`: Path to benchmark questions (default: `questions.csv`)
 - `--batch_size`: Number of questions to process at once (default: 10)
@@ -165,6 +166,7 @@ python eval_pipeline.py \
 ```
 
 **Parameters**:
+
 - `--model_name`: Model to evaluate (must match generation step)
 - `--starts`: Starting question index (default: 0)
 - `--ends`: Ending question index (default: 5000)
