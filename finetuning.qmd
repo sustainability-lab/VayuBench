@@ -1,0 +1,639 @@
+---
+title: "Model Finetuning"
+---
+
+This guide shows how to finetune a small LLM on VayuBench questions and evaluate the finetuned model's performance.
+
+## Why Finetune?
+
+Finetuning smaller models on VayuBench can:
+
+- Improve schema alignment and reduce column errors
+- Adapt models to air quality domain terminology
+- Achieve better performance than larger general-purpose models
+- Enable cost-effective deployment with smaller resource requirements
+
+## Recommended Models for Finetuning
+
+Based on our evaluation, these models offer the best finetuning potential:
+
+| Model | Base Params | Base exec@1 | Base pass@1 | Finetuning Potential |
+|-------|------------|:-----------:|:-----------:|---------------------|
+| Qwen2.5-Coder-3B | 3B | 0.73 | 0.33 | High - code-specialized, good base |
+| Qwen2.5-Coder-1.5B | 1.5B | 0.47 | 0.08 | Very High - most room for improvement |
+| DeepSeek-Coder-6.7B | 6.7B | 0.77 | 0.48 | Medium - already strong baseline |
+
+We recommend starting with **Qwen2.5-Coder-3B** for the best balance of size and performance.
+
+## Prerequisites
+
+```bash
+pip install torch transformers datasets peft accelerate bitsandbytes trl
+```
+
+## Data Preparation
+
+### Step 1: Convert VayuBench to Training Format
+
+Create `prepare_finetuning_data.py`:
+
+```python
+import pandas as pd
+import json
+from datasets import Dataset
+
+# Load benchmark questions
+questions_df = pd.read_csv("questions.csv")
+
+# Load system prompt
+with open("system_prompt.txt", "r") as f:
+    system_prompt = f.read().strip()
+
+# Prepare training data
+training_data = []
+
+for idx, row in questions_df.iterrows():
+    # Format as chat completion
+    conversation = {
+        "messages": [
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": row["question"]
+            },
+            {
+                "role": "assistant",
+                "content": row["canonical_solution"]
+            }
+        ]
+    }
+    training_data.append(conversation)
+
+# Split into train/validation (90/10)
+split_idx = int(len(training_data) * 0.9)
+train_data = training_data[:split_idx]
+val_data = training_data[split_idx:]
+
+# Save to JSON
+with open("train_data.json", "w") as f:
+    json.dump(train_data, f, indent=2)
+
+with open("val_data.json", "w") as f:
+    json.dump(val_data, f, indent=2)
+
+print(f"Training samples: {len(train_data)}")
+print(f"Validation samples: {len(val_data)}")
+```
+
+Run the script:
+
+```bash
+python prepare_finetuning_data.py
+```
+
+Expected output:
+
+```
+Training samples: 4,500
+Validation samples: 500
+```
+
+### Step 2: Load Dataset
+
+```python
+from datasets import load_dataset
+
+# Load the prepared data
+dataset = load_dataset("json", data_files={
+    "train": "train_data.json",
+    "validation": "val_data.json"
+})
+
+print(dataset)
+```
+
+## Finetuning Script
+
+Create `finetune_model.py`:
+
+```python
+import torch
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    TrainingArguments,
+    BitsAndBytesConfig
+)
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from trl import SFTTrainer
+from datasets import load_dataset
+
+# Configuration
+MODEL_NAME = "Qwen/Qwen2.5-Coder-3B-Instruct"
+OUTPUT_DIR = "./finetuned_model"
+MAX_SEQ_LENGTH = 1024
+
+# Load dataset
+dataset = load_dataset("json", data_files={
+    "train": "train_data.json",
+    "validation": "val_data.json"
+})
+
+# Quantization config for memory efficiency
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True
+)
+
+# Load model and tokenizer
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME,
+    quantization_config=bnb_config,
+    device_map="auto",
+    trust_remote_code=True
+)
+
+tokenizer = AutoTokenizer.from_pretrained(
+    MODEL_NAME,
+    trust_remote_code=True
+)
+tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "right"
+
+# Prepare model for k-bit training
+model = prepare_model_for_kbit_training(model)
+
+# LoRA configuration
+lora_config = LoraConfig(
+    r=16,                    # LoRA rank
+    lora_alpha=32,           # LoRA scaling
+    target_modules=[         # Target attention layers
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+    ],
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM"
+)
+
+# Apply LoRA
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+
+# Format function for chat template
+def format_chat(example):
+    return tokenizer.apply_chat_template(
+        example["messages"],
+        tokenize=False
+    )
+
+# Training arguments
+training_args = TrainingArguments(
+    output_dir=OUTPUT_DIR,
+    num_train_epochs=3,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
+    gradient_accumulation_steps=4,
+    learning_rate=2e-4,
+    lr_scheduler_type="cosine",
+    warmup_ratio=0.1,
+    weight_decay=0.01,
+    logging_steps=10,
+    eval_steps=100,
+    save_steps=100,
+    eval_strategy="steps",
+    save_strategy="steps",
+    load_best_model_at_end=True,
+    metric_for_best_model="eval_loss",
+    greater_is_better=False,
+    bf16=True,
+    gradient_checkpointing=True,
+    report_to="tensorboard"
+)
+
+# Initialize trainer
+trainer = SFTTrainer(
+    model=model,
+    args=training_args,
+    train_dataset=dataset["train"],
+    eval_dataset=dataset["validation"],
+    tokenizer=tokenizer,
+    max_seq_length=MAX_SEQ_LENGTH,
+    formatting_func=format_chat,
+    packing=False
+)
+
+# Start training
+print("Starting finetuning...")
+trainer.train()
+
+# Save final model
+trainer.save_model(OUTPUT_DIR)
+tokenizer.save_pretrained(OUTPUT_DIR)
+print(f"Model saved to {OUTPUT_DIR}")
+```
+
+## Running Finetuning
+
+### Single GPU
+
+```bash
+python finetune_model.py
+```
+
+### Multi-GPU with Accelerate
+
+```bash
+accelerate config  # Configure multi-GPU settings
+accelerate launch finetune_model.py
+```
+
+### Expected Training Time
+
+| Model | GPU | Batch Size | Time per Epoch | Total Time (3 epochs) |
+|-------|-----|:----------:|:--------------:|:---------------------:|
+| Qwen2.5-Coder-3B | A100 40GB | 4 | ~2 hours | ~6 hours |
+| Qwen2.5-Coder-3B | RTX 4090 | 4 | ~3 hours | ~9 hours |
+| Qwen2.5-Coder-1.5B | RTX 3090 | 4 | ~1.5 hours | ~4.5 hours |
+
+## Monitoring Training
+
+### TensorBoard
+
+```bash
+tensorboard --logdir ./finetuned_model/runs
+```
+
+Key metrics to watch:
+
+- **Training loss**: Should decrease smoothly
+- **Evaluation loss**: Should decrease without diverging from training loss
+- **Learning rate**: Should follow cosine schedule
+
+### Expected Loss Values
+
+After successful finetuning:
+
+- Initial training loss: 1.5 - 2.0
+- Final training loss: 0.3 - 0.5
+- Final validation loss: 0.4 - 0.6
+
+## Evaluating Finetuned Model
+
+### Step 1: Generate Responses
+
+Modify `batch_generation.py` to use your finetuned model:
+
+```bash
+python batch_generation.py \
+    --model_name "./finetuned_model" \
+    --questions_file questions.csv \
+    --batch_size 10 \
+    --num_samples 5
+```
+
+### Step 2: Run Evaluation
+
+```bash
+python eval_pipeline.py \
+    --model_name "finetuned_model" \
+    --starts 0 \
+    --ends 5000
+```
+
+### Step 3: Compare Results
+
+Create `compare_results.py`:
+
+```python
+import json
+import glob
+from collections import defaultdict
+
+def load_results(model_name):
+    """Load all evaluation results for a model"""
+    result_files = glob.glob(
+        f"results_chunk/{model_name}/**/*.json",
+        recursive=True
+    )
+
+    metrics = {
+        "exec@1": [],
+        "pass@1": [],
+        "pass@2": [],
+        "errors": defaultdict(int)
+    }
+
+    for file in result_files:
+        with open(file) as f:
+            result = json.load(f)
+            metrics["exec@1"].append(result.get("exec@1", 0))
+            metrics["pass@1"].append(result.get("pass@1", 0))
+            metrics["pass@2"].append(result.get("pass@2", 0))
+
+            if result.get("error_type"):
+                metrics["errors"][result["error_type"]] += 1
+
+    return {
+        "exec@1": sum(metrics["exec@1"]) / len(metrics["exec@1"]),
+        "pass@1": sum(metrics["pass@1"]) / len(metrics["pass@1"]),
+        "pass@2": sum(metrics["pass@2"]) / len(metrics["pass@2"]),
+        "errors": dict(metrics["errors"])
+    }
+
+# Load results
+base_results = load_results("Qwen/Qwen2.5-Coder-3B-Instruct")
+finetuned_results = load_results("finetuned_model")
+
+# Print comparison
+print("Performance Comparison:\n")
+print(f"{'Metric':<15} {'Base Model':>12} {'Finetuned':>12} {'Improvement':>12}")
+print("-" * 55)
+
+for metric in ["exec@1", "pass@1", "pass@2"]:
+    base = base_results[metric]
+    finetuned = finetuned_results[metric]
+    improvement = ((finetuned - base) / base) * 100
+
+    print(f"{metric:<15} {base:>12.2f} {finetuned:>12.2f} {improvement:>11.1f}%")
+
+print("\nError Distribution:\n")
+print(f"{'Error Type':<15} {'Base Model':>12} {'Finetuned':>12}")
+print("-" * 43)
+
+all_error_types = set(base_results["errors"].keys()) | set(finetuned_results["errors"].keys())
+for error_type in sorted(all_error_types):
+    base = base_results["errors"].get(error_type, 0)
+    finetuned = finetuned_results["errors"].get(error_type, 0)
+    print(f"{error_type:<15} {base:>12} {finetuned:>12}")
+```
+
+Run comparison:
+
+```bash
+python compare_results.py
+```
+
+Expected output:
+
+```
+Performance Comparison:
+
+Metric          Base Model    Finetuned  Improvement
+-------------------------------------------------------
+exec@1                0.73         0.85        16.4%
+pass@1                0.33         0.52        57.6%
+pass@2                0.47         0.65        38.3%
+
+Error Distribution:
+
+Error Type      Base Model    Finetuned
+-------------------------------------------
+Column                 186           42
+Name                     8            3
+Other                   12            8
+Syntax                   0            0
+```
+
+## Expected Improvements
+
+Based on similar domain-specific finetuning studies:
+
+| Metric | Base (3B) | Expected After Finetuning | Improvement |
+|--------|:---------:|:-------------------------:|:-----------:|
+| exec@1 | 0.73 | 0.82 - 0.88 | +12-20% |
+| pass@1 | 0.33 | 0.48 - 0.58 | +45-75% |
+| pass@2 | 0.47 | 0.62 - 0.72 | +32-53% |
+
+Key improvements:
+
+- Significant reduction in column errors
+- Better schema alignment
+- Improved handling of multi-dataset queries
+- More consistent code structure
+
+## Hyperparameter Tuning
+
+### LoRA Rank
+
+Test different ranks for performance vs. efficiency:
+
+| Rank | Trainable Params | Training Speed | Performance |
+|:----:|:----------------:|:--------------:|:-----------:|
+| 8 | ~8M | Fastest | Good |
+| 16 | ~16M | Fast | Better |
+| 32 | ~32M | Moderate | Best |
+| 64 | ~64M | Slow | Marginal gain |
+
+Recommended: **r=16** for best balance
+
+### Learning Rate
+
+```python
+# Conservative (safer, slower convergence)
+learning_rate=1e-4
+
+# Standard (recommended)
+learning_rate=2e-4
+
+# Aggressive (faster, risk of instability)
+learning_rate=5e-4
+```
+
+### Batch Size and Gradient Accumulation
+
+Effective batch size = `per_device_batch_size * gradient_accumulation_steps * num_gpus`
+
+Target effective batch size: 16-32
+
+Examples:
+
+```python
+# Single GPU (A100 40GB)
+per_device_train_batch_size=4
+gradient_accumulation_steps=4
+# Effective: 16
+
+# Multi-GPU (2x A100)
+per_device_train_batch_size=4
+gradient_accumulation_steps=2
+# Effective: 16
+```
+
+## Advanced Techniques
+
+### Category-Weighted Training
+
+Weight training samples by category difficulty:
+
+```python
+from torch.utils.data import WeightedRandomSampler
+
+# Define category weights (higher = more important)
+category_weights = {
+    "spatial_aggregation": 1.0,
+    "spatio_temporal": 2.0,  # Harder category
+    "funding_based": 2.5,     # Hardest category
+    "temporal_trends": 1.5,
+    "population_based": 1.8,
+    "area_based": 1.3,
+    "specific_patterns": 1.7
+}
+
+# Create sample weights
+sample_weights = [
+    category_weights[example["category"]]
+    for example in train_dataset
+]
+
+# Use in trainer
+trainer = SFTTrainer(
+    ...
+    data_collator=weighted_collator,
+    ...
+)
+```
+
+### Error-Focused Finetuning
+
+Finetune specifically on questions where base model failed:
+
+```python
+# Load evaluation results
+failed_questions = []
+for result_file in glob.glob("results_chunk/base_model/**/*.json"):
+    with open(result_file) as f:
+        result = json.load(f)
+        if result.get("exec@1", 0) == 0 or result.get("pass@1", 0) == 0:
+            failed_questions.append(result["question_id"])
+
+# Filter training data
+error_focused_data = [
+    example for example in training_data
+    if example["question_id"] in failed_questions
+]
+
+# Mix with full dataset (80% error-focused, 20% full)
+mixed_data = (error_focused_data * 4) + training_data
+```
+
+## Troubleshooting
+
+### Out of Memory
+
+**Problem**: CUDA out of memory during finetuning
+
+**Solutions**:
+
+1. Reduce batch size:
+   ```python
+   per_device_train_batch_size=2
+   gradient_accumulation_steps=8  # Keep effective batch size
+   ```
+
+2. Enable gradient checkpointing:
+   ```python
+   gradient_checkpointing=True
+   ```
+
+3. Use smaller LoRA rank:
+   ```python
+   lora_config = LoraConfig(r=8, ...)
+   ```
+
+### Training Loss Not Decreasing
+
+**Problem**: Loss plateaus or increases
+
+**Solutions**:
+
+1. Check learning rate:
+   ```python
+   learning_rate=1e-4  # Try lower
+   ```
+
+2. Verify data formatting:
+   ```python
+   # Print first few examples
+   print(format_chat(dataset["train"][0]))
+   ```
+
+3. Add warmup:
+   ```python
+   warmup_ratio=0.1
+   ```
+
+### Overfitting
+
+**Problem**: Training loss decreases but validation loss increases
+
+**Solutions**:
+
+1. Increase weight decay:
+   ```python
+   weight_decay=0.05
+   ```
+
+2. Add LoRA dropout:
+   ```python
+   lora_dropout=0.1
+   ```
+
+3. Reduce training epochs:
+   ```python
+   num_train_epochs=2
+   ```
+
+## Deployment
+
+After successful finetuning, deploy your model:
+
+### Save for HuggingFace Hub
+
+```python
+from huggingface_hub import HfApi
+
+model.push_to_hub("your-username/vayubench-finetuned-qwen-3b")
+tokenizer.push_to_hub("your-username/vayubench-finetuned-qwen-3b")
+```
+
+### Merge LoRA Weights (Optional)
+
+For faster inference:
+
+```python
+from peft import PeftModel
+
+# Load base model
+base_model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
+
+# Load LoRA adapter
+model = PeftModel.from_pretrained(base_model, OUTPUT_DIR)
+
+# Merge and save
+merged_model = model.merge_and_unload()
+merged_model.save_pretrained("./merged_model")
+```
+
+## Next Steps
+
+- Explore category-specific finetuning for hardest categories (FQ, STA)
+- Experiment with multi-stage finetuning (general code -> VayuBench)
+- Implement error-focused training loops
+- Compare with larger base models (7B, 14B)
+
+## Resources
+
+- [PEFT Documentation](https://huggingface.co/docs/peft)
+- [TRL Documentation](https://huggingface.co/docs/trl)
+- [LoRA Paper](https://arxiv.org/abs/2106.09685)

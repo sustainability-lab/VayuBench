@@ -19,6 +19,8 @@ website:
         href: categories.qmd
       - text: "Getting Started"
         href: getting-started.qmd
+      - text: "Finetuning"
+        href: finetuning.qmd
       - text: "Results"
         href: results.qmd
       - text: "Paper"
