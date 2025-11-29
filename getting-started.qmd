@@ -365,6 +365,7 @@ sa_questions.to_csv("questions_sa.csv", index=False)
 **Problem**: CUDA out of memory during generation
 
 **Solutions**:
+
 1. Enable 4-bit quantization (already enabled in `batch_generation.py`)
 2. Reduce `batch_size`:
    ```bash
@@ -377,6 +378,7 @@ sa_questions.to_csv("questions_sa.csv", index=False)
 **Problem**: Evaluation takes too long
 
 **Solutions**:
+
 1. Use chunked processing with `--starts` and `--ends`
 2. Reduce timeout in `code_eval_utils.py`:
    ```python
