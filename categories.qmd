@@ -65,6 +65,7 @@ def get_response(data, states_data, ncap_funding_data):
 ```
 
 **Skills Tested**:
+
 - Temporal filtering (`dt.year`, `dt.month`, `dt.day`)
 - Geographic grouping (`groupby`)
 - Aggregation functions (`mean`, `max`, `min`)
@@ -113,6 +114,7 @@ def get_response(data, states_data, ncap_funding_data):
 ```
 
 **Skills Tested**:
+
 - Multi-period temporal filtering
 - Cross-time comparisons
 - Change/delta calculations
@@ -154,6 +156,7 @@ def get_response(data, states_data, ncap_funding_data):
 ```
 
 **Skills Tested**:
+
 - Temporal aggregation (`dt.month_name()`, `dt.dayofweek`, `dt.year`)
 - Time-series grouping
 - Trend identification
@@ -203,6 +206,7 @@ def get_response(data, states_data, ncap_funding_data):
 ```
 
 **Skills Tested**:
+
 - Multi-dataset integration
 - Financial data analysis
 - Column selection and aggregation
@@ -253,6 +257,7 @@ def get_response(data, states_data, ncap_funding_data):
 ```
 
 **Skills Tested**:
+
 - Multi-dataset joins (`merge`)
 - Demographic analysis
 - Weighted calculations
@@ -302,6 +307,7 @@ def get_response(data, states_data, ncap_funding_data):
 ```
 
 **Skills Tested**:
+
 - Spatial normalization
 - Geographic density calculations
 - Multi-dataset integration
@@ -353,6 +359,7 @@ def get_response(data, states_data, ncap_funding_data):
 ```
 
 **Skills Tested**:
+
 - Threshold detection
 - Pattern matching
 - Time window filtering
