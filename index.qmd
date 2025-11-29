@@ -73,6 +73,17 @@ Best performing models:
 
 See [Results](results.qmd) for full evaluation.
 
+## Finetune Your Own Model
+
+Want to improve smaller models on VayuBench? Our [finetuning guide](finetuning.qmd) shows how to:
+
+- Prepare training data from benchmark questions
+- Finetune models using LoRA and 4-bit quantization
+- Evaluate and compare finetuned vs base models
+- Achieve 45-75% improvement in pass@1 for 3B models
+
+Complete scripts provided for the full workflow: `prepare_finetuning_data.py`, `finetune_model.py`, `compare_results.py`.
+
 ## Citation
 
 ```bibtex

@@ -398,6 +398,7 @@ sa_questions.to_csv("questions_sa.csv", index=False)
 
 - Learn about the [Datasets](datasets.qmd) used in VayuBench
 - Explore the [Categories](categories.qmd) of benchmark questions
+- [Finetune your own model](finetuning.qmd) to improve performance
 - View [Results](results.qmd) from our LLM evaluation
 
 ## Getting Help
